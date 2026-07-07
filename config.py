@@ -18,6 +18,10 @@ load_dotenv()
 # "Best Use of Gemma" bonus pool at zero extra build cost.
 LOCAL_MODEL = os.getenv("LOCAL_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "256"))
+# "transformers" (works everywhere, uses MPS on Apple Silicon if available)
+# or "mlx" (Apple Silicon only — faster, lighter, needs mlx-lm installed
+# separately since it can't be a hard requirement for the AMD instance).
+LOCAL_BACKEND = os.getenv("LOCAL_BACKEND", "transformers")
 
 # --- Remote tier (Fireworks AI) ---
 FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY", "")
