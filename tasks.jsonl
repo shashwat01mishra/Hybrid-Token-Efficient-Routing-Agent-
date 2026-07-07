@@ -1,24 +1,269 @@
-{"task": "What is 17 times 23?", "expected": "391", "match": "numeric"}
-{"task": "What is 144 divided by 12?", "expected": "12", "match": "numeric"}
-{"task": "What is 7 squared?", "expected": "49", "match": "numeric"}
-{"task": "What is 15% of 200?", "expected": "30", "match": "numeric"}
-{"task": "What is the sum of 45 and 78?", "expected": "123", "match": "numeric"}
-{"task": "What is 2 to the power of 10?", "expected": "1024", "match": "numeric"}
-{"task": "What is 9 times 9?", "expected": "81", "match": "numeric"}
-{"task": "What is 100 minus 37?", "expected": "63", "match": "numeric"}
-{"task": "What is the capital of France?", "expected": "Paris", "match": "contains"}
-{"task": "What is the capital of Japan?", "expected": "Tokyo", "match": "contains"}
-{"task": "What is the capital of Australia?", "expected": "Canberra", "match": "contains"}
-{"task": "Who wrote Romeo and Juliet?", "expected": "Shakespeare", "match": "contains"}
-{"task": "What is the chemical symbol for gold?", "expected": "Au", "match": "contains"}
-{"task": "What is the boiling point of water in Celsius at sea level?", "expected": "100", "match": "numeric"}
-{"task": "What is the freezing point of water in Celsius?", "expected": "0", "match": "numeric"}
-{"task": "What planet is known as the Red Planet?", "expected": "Mars", "match": "contains"}
-{"task": "What is the largest ocean on Earth?", "expected": "Pacific", "match": "contains"}
-{"task": "What year did World War II end?", "expected": "1945", "match": "numeric"}
-{"task": "How many continents are there?", "expected": "7", "match": "numeric"}
-{"task": "What is the chemical formula for water?", "expected": "H2O", "match": "contains"}
-{"task": "Who painted the Mona Lisa?", "expected": "Leonardo", "match": "contains"}
-{"task": "What is the smallest prime number?", "expected": "2", "match": "numeric"}
-{"task": "How many sides does a hexagon have?", "expected": "6", "match": "numeric"}
-{"task": "What is the atomic number of oxygen?", "expected": "8", "match": "numeric"}
+{"task": "What is the capital of France?", "expected": "Paris", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Japan?", "expected": "Tokyo", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Australia?", "expected": "Canberra", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Canada?", "expected": "Ottawa", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Germany?", "expected": "Berlin", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Egypt?", "expected": "Cairo", "match": "contains", "category": "factual"}
+{"task": "What is the capital of Brazil?", "expected": "Brasilia", "match": "contains", "category": "factual"}
+{"task": "What is the capital of South Korea?", "expected": "Seoul", "match": "contains", "category": "factual"}
+{"task": "Who wrote Romeo and Juliet?", "expected": "Shakespeare", "match": "contains", "category": "factual"}
+{"task": "Who wrote Pride and Prejudice?", "expected": "Austen", "match": "contains", "category": "factual"}
+{"task": "Who wrote War and Peace?", "expected": "Tolstoy", "match": "contains", "category": "factual"}
+{"task": "Who painted the Mona Lisa?", "expected": "Leonardo", "match": "contains", "category": "factual"}
+{"task": "Who painted Starry Night?", "expected": "Gogh", "match": "contains", "category": "factual"}
+{"task": "What is the chemical symbol for gold?", "expected": "Au", "match": "contains", "category": "factual"}
+{"task": "What is the chemical symbol for iron?", "expected": "Fe", "match": "contains", "category": "factual"}
+{"task": "What is the chemical symbol for sodium?", "expected": "Na", "match": "contains", "category": "factual"}
+{"task": "What is the chemical formula for water?", "expected": "H2O", "match": "contains", "category": "factual"}
+{"task": "What is the chemical formula for table salt?", "expected": "NaCl", "match": "contains", "category": "factual"}
+{"task": "What planet is known as the Red Planet?", "expected": "Mars", "match": "contains", "category": "factual"}
+{"task": "What planet is the largest in the solar system?", "expected": "Jupiter", "match": "contains", "category": "factual"}
+{"task": "What is the smallest planet in the solar system?", "expected": "Mercury", "match": "contains", "category": "factual"}
+{"task": "What is the largest ocean on Earth?", "expected": "Pacific", "match": "contains", "category": "factual"}
+{"task": "What is the longest river in Africa?", "expected": "Nile", "match": "contains", "category": "factual"}
+{"task": "What gas do plants absorb from the atmosphere for photosynthesis?", "expected": "carbon dioxide", "match": "contains", "category": "factual"}
+{"task": "What is the powerhouse of the cell?", "expected": "mitochondria", "match": "contains", "category": "factual"}
+{"task": "What is the hardest natural substance on Earth?", "expected": "diamond", "match": "contains", "category": "factual"}
+{"task": "What metal is liquid at room temperature?", "expected": "mercury", "match": "contains", "category": "factual"}
+{"task": "What is the boiling point of water in Celsius at sea level?", "expected": "100", "match": "numeric", "category": "factual"}
+{"task": "What is the freezing point of water in Celsius?", "expected": "0", "match": "numeric", "category": "factual"}
+{"task": "How many continents are there?", "expected": "7", "match": "numeric", "category": "factual"}
+{"task": "How many bones are in the adult human body?", "expected": "206", "match": "numeric", "category": "factual"}
+{"task": "How many sides does a hexagon have?", "expected": "6", "match": "numeric", "category": "factual"}
+{"task": "How many sides does an octagon have?", "expected": "8", "match": "numeric", "category": "factual"}
+{"task": "What is the smallest prime number?", "expected": "2", "match": "numeric", "category": "factual"}
+{"task": "What is the atomic number of oxygen?", "expected": "8", "match": "numeric", "category": "factual"}
+{"task": "What is the atomic number of hydrogen?", "expected": "1", "match": "numeric", "category": "factual"}
+{"task": "What year did World War II end?", "expected": "1945", "match": "numeric", "category": "factual"}
+{"task": "What year did World War I start?", "expected": "1914", "match": "numeric", "category": "factual"}
+{"task": "What year did India gain independence?", "expected": "1947", "match": "numeric", "category": "factual"}
+{"task": "What year did the Berlin Wall fall?", "expected": "1989", "match": "numeric", "category": "factual"}
+{"task": "How many planets are in the solar system?", "expected": "8", "match": "numeric", "category": "factual"}
+{"task": "How many strings does a standard guitar have?", "expected": "6", "match": "numeric", "category": "factual"}
+{"task": "How many players are on a standard soccer team on the field?", "expected": "11", "match": "numeric", "category": "factual"}
+{"task": "How many legs does a spider have?", "expected": "8", "match": "numeric", "category": "factual"}
+{"task": "If all cats are mammals and all mammals are animals, are all cats animals?", "expected": "yes", "match": "contains", "category": "factual"}
+{"task": "If it is raining, the ground gets wet. The ground is not wet. Is it raining?", "expected": "no", "match": "contains", "category": "factual"}
+{"task": "Is the sun a star or a planet?", "expected": "star", "match": "contains", "category": "factual"}
+{"task": "Is a tomato a fruit or a vegetable, botanically speaking?", "expected": "fruit", "match": "contains", "category": "factual"}
+{"task": "Which is heavier: a kilogram of feathers or a kilogram of iron?", "expected": "same", "match": "contains", "category": "factual"}
+{"task": "What is 3 to the power of 2?", "expected": "9", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 6 to the power of 2?", "expected": "36", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 152 minus 3?", "expected": "149", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 3 to the power of 4?", "expected": "81", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 divided by 3?", "expected": "3", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 225 plus 240?", "expected": "465", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 25% of 10?", "expected": "2", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 743 minus 8?", "expected": "735", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 469 minus 6?", "expected": "463", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 29 squared?", "expected": "841", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 779 plus 827?", "expected": "1606", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 724 minus 8?", "expected": "716", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 37 times 21?", "expected": "777", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 990 minus 7?", "expected": "983", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 96 plus 391?", "expected": "487", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 369 plus 869?", "expected": "1238", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 79 times 35?", "expected": "2765", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 3 squared?", "expected": "9", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 to the power of 4?", "expected": "6561", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 998 plus 946?", "expected": "1944", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 148 divided by 4?", "expected": "37", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 82 times 81?", "expected": "6642", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 13 squared?", "expected": "169", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50% of 50?", "expected": "25", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 48 plus 679?", "expected": "727", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 801 minus 6?", "expected": "795", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 877 plus 240?", "expected": "1117", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5 squared?", "expected": "25", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 310 divided by 10?", "expected": "31", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 7 to the power of 2?", "expected": "49", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 47 times 28?", "expected": "1316", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 6 to the power of 4?", "expected": "1296", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 4 to the power of 4?", "expected": "256", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5 to the power of 2?", "expected": "25", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 266 divided by 14?", "expected": "19", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5 to the power of 4?", "expected": "625", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 times 31?", "expected": "279", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 12 squared?", "expected": "144", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 60 divided by 10?", "expected": "6", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 945 minus 7?", "expected": "938", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 681 minus 9?", "expected": "672", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 176 divided by 16?", "expected": "11", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 19 times 33?", "expected": "627", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 25% of 200?", "expected": "50", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 208 divided by 13?", "expected": "16", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 531 minus 9?", "expected": "522", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 775 plus 50?", "expected": "825", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 652 minus 4?", "expected": "648", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 23 squared?", "expected": "529", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 104 divided by 4?", "expected": "26", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 560 divided by 16?", "expected": "35", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 72 times 3?", "expected": "216", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50% of 75?", "expected": "37", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 16 times 39?", "expected": "624", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 217 divided by 7?", "expected": "31", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 978 plus 741?", "expected": "1719", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 7 squared?", "expected": "49", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50% of 20?", "expected": "10", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 83 times 66?", "expected": "5478", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 10% of 50?", "expected": "5", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 99 times 22?", "expected": "2178", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 64 times 4?", "expected": "256", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 953 plus 373?", "expected": "1326", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 27 squared?", "expected": "729", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 32 times 9?", "expected": "288", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 909 minus 3?", "expected": "906", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 751 plus 499?", "expected": "1250", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 4 squared?", "expected": "16", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 19 squared?", "expected": "361", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 6 squared?", "expected": "36", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 685 minus 9?", "expected": "676", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15% of 25?", "expected": "3", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 10% of 200?", "expected": "20", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 53 times 87?", "expected": "4611", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 7 to the power of 3?", "expected": "343", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5% of 400?", "expected": "20", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 240 minus 3?", "expected": "237", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 4 times 77?", "expected": "308", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 25% of 50?", "expected": "12", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 17 minus 3?", "expected": "14", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 2 to the power of 2?", "expected": "4", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 929 plus 34?", "expected": "963", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 528 plus 245?", "expected": "773", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 87 times 64?", "expected": "5568", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 562 minus 4?", "expected": "558", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 to the power of 2?", "expected": "81", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 17 squared?", "expected": "289", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15 squared?", "expected": "225", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 106 minus 3?", "expected": "103", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 8 to the power of 3?", "expected": "512", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 465 divided by 15?", "expected": "31", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 25 squared?", "expected": "625", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 691 plus 671?", "expected": "1362", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 96 divided by 12?", "expected": "8", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 206 minus 5?", "expected": "201", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 10% of 400?", "expected": "40", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 133 divided by 7?", "expected": "19", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 54 divided by 9?", "expected": "6", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 152 divided by 19?", "expected": "8", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 669 plus 555?", "expected": "1224", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 2 squared?", "expected": "4", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 950 plus 773?", "expected": "1723", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 squared?", "expected": "81", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 426 minus 9?", "expected": "417", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 216 divided by 8?", "expected": "27", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 170 plus 390?", "expected": "560", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 401 plus 273?", "expected": "674", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 319 divided by 11?", "expected": "29", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 313 minus 5?", "expected": "308", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 595 plus 755?", "expected": "1350", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50% of 10?", "expected": "5", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 9 times 8?", "expected": "72", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 25% of 400?", "expected": "100", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 18 squared?", "expected": "324", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 68 minus 3?", "expected": "65", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 611 plus 71?", "expected": "682", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5 to the power of 3?", "expected": "125", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 966 plus 913?", "expected": "1879", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 431 plus 675?", "expected": "1106", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15% of 100?", "expected": "15", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 695 minus 7?", "expected": "688", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 281 minus 8?", "expected": "273", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 697 minus 6?", "expected": "691", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 600 divided by 12?", "expected": "50", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 11 plus 471?", "expected": "482", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5% of 20?", "expected": "1", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 18 times 46?", "expected": "828", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 902 plus 252?", "expected": "1154", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 38 times 22?", "expected": "836", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 893 divided by 19?", "expected": "47", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 80 times 85?", "expected": "6800", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 86 times 15?", "expected": "1290", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 280 minus 3?", "expected": "277", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 762 plus 568?", "expected": "1330", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 288 minus 6?", "expected": "282", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 28 times 89?", "expected": "2492", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50 divided by 10?", "expected": "5", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 651 plus 435?", "expected": "1086", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 10 squared?", "expected": "100", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 5 plus 343?", "expected": "348", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 8 to the power of 4?", "expected": "4096", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 116 plus 79?", "expected": "195", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 856 plus 380?", "expected": "1236", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 20% of 25?", "expected": "5", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 52 minus 6?", "expected": "46", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 7 times 47?", "expected": "329", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 708 minus 5?", "expected": "703", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 3 to the power of 3?", "expected": "27", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 10% of 25?", "expected": "2", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 912 minus 8?", "expected": "904", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 185 plus 756?", "expected": "941", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 54 times 87?", "expected": "4698", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 22 times 91?", "expected": "2002", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 393 plus 895?", "expected": "1288", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 881 plus 483?", "expected": "1364", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 214 minus 9?", "expected": "205", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 41 times 31?", "expected": "1271", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 34 minus 5?", "expected": "29", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 228 divided by 12?", "expected": "19", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 84 times 67?", "expected": "5628", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 437 divided by 19?", "expected": "23", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 120 plus 900?", "expected": "1020", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 24 times 76?", "expected": "1824", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 6 times 15?", "expected": "90", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15% of 200?", "expected": "30", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 20% of 20?", "expected": "4", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15% of 50?", "expected": "7", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 727 plus 448?", "expected": "1175", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 534 plus 949?", "expected": "1483", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 176 divided by 4?", "expected": "44", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 81 times 42?", "expected": "3402", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 66 times 41?", "expected": "2706", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 407 divided by 11?", "expected": "37", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 206 minus 8?", "expected": "198", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 20% of 75?", "expected": "15", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 15% of 10?", "expected": "1", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 28 times 57?", "expected": "1596", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 20 squared?", "expected": "400", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 20% of 100?", "expected": "20", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 720 divided by 16?", "expected": "45", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 533 minus 9?", "expected": "524", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 30 squared?", "expected": "900", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 684 minus 3?", "expected": "681", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 67 times 86?", "expected": "5762", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 26 squared?", "expected": "676", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 698 minus 6?", "expected": "692", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 835 minus 5?", "expected": "830", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 35 minus 2?", "expected": "33", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 496 minus 3?", "expected": "493", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 630 divided by 15?", "expected": "42", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 99 divided by 9?", "expected": "11", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 190 minus 9?", "expected": "181", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 572 plus 257?", "expected": "829", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 186 divided by 6?", "expected": "31", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 343 divided by 7?", "expected": "49", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 500 divided by 10?", "expected": "50", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 870 minus 6?", "expected": "864", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 50% of 400?", "expected": "200", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 291 minus 9?", "expected": "282", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 732 plus 294?", "expected": "1026", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 288 minus 7?", "expected": "281", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 71 times 12?", "expected": "852", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 164 minus 5?", "expected": "159", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 282 divided by 6?", "expected": "47", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 75 minus 8?", "expected": "67", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 432 divided by 12?", "expected": "36", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 75 divided by 15?", "expected": "5", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 862 minus 8?", "expected": "854", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 920 divided by 20?", "expected": "46", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 879 plus 903?", "expected": "1782", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 34 divided by 17?", "expected": "2", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 40 times 98?", "expected": "3920", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 540 divided by 15?", "expected": "36", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 289 minus 8?", "expected": "281", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 52 divided by 2?", "expected": "26", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 87 times 88?", "expected": "7656", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 14 squared?", "expected": "196", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 4 to the power of 3?", "expected": "64", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 647 minus 2?", "expected": "645", "match": "numeric", "category": "arithmetic"}
+{"task": "What is 760 divided by 20?", "expected": "38", "match": "numeric", "category": "arithmetic"}

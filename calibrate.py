@@ -88,10 +88,18 @@ def run_generation_pass():
 
         results.append({
             "task": t["task"],
+            "category": t.get("category", "unknown"),
             "expected": t.get("expected"),
             "generated": gen["text"],
             "mean_logprob": gen["mean_logprob"],
             "min_logprob": gen["min_logprob"],
+            "entropy_mean": gen["entropy_mean"],
+            "top2_margin_mean": gen["top2_margin_mean"],
+            "worst_decile_mean": gen["worst_decile_mean"],
+            "logprob_variance": gen["logprob_variance"],
+            "eos_logprob_last": gen["eos_logprob_last"],
+            "num_tokens": gen["num_tokens"],
+            "latency_ms": gen["latency_ms"],
             "correct": is_correct,
         })
 

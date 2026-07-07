@@ -31,6 +31,15 @@ either escalates to Fireworks. This is deliberately **not** the
 embedding/geometry-based approach from other (unpublished) research —
 that line is being kept separate on purpose.
 
+`local_model.py` also computes and logs (but doesn't yet route on):
+`entropy_mean`, `top2_margin_mean`, `worst_decile_mean`, `logprob_variance`,
+`eos_logprob_last` — all free from the same per-step distribution. These
+are feature-engineered for a future learned router (logistic regression
+or similar), not used yet. Sequencing matters here: training a classifier
+on 24 hand-typed examples memorizes noise; it only makes sense once
+`tasks.jsonl` is large enough (269 now, generated — see below) for the
+statistics to mean something.
+
 ## Files
 
 | File | Role |
@@ -40,7 +49,9 @@ that line is being kept separate on purpose.
 | `router.py` | The routing decision — the actual "intelligence" being judged |
 | `remote_client.py` | Fireworks API call, only hit on escalation |
 | `agent_loop.py` | Orchestrates the above, logs every decision to `runs/agent_log.jsonl` |
-| `tasks.jsonl` | Small labeled task set for calibration — deliberately closed-form (math, exact factual recall) so correctness is checkable by exact/numeric match, no LLM judge needed |
+| `tasks.jsonl` | Full calibration set — generated from `tasks_factual.jsonl` + auto-generated arithmetic, 269 tasks |
+| `tasks_factual.jsonl` | Curated closed-form factual/reasoning items (49) — hand-picked since there's no formula for "capital of France" |
+| `generate_tasks.py` | Generates the arithmetic portion of `tasks.jsonl` programmatically (`--n`, `--seed`) — this is how 24 tasks became 269 without 220 hours of hand-typing |
 | `calibrate.py` | Runs every task through the local model, grades correctness, sweeps threshold pairs, reports the best operating point |
 
 ## Running it
@@ -99,13 +110,20 @@ first pass shows the rough operating region).
 
 ## What's still open (in priority order)
 
-1. **Run `calibrate.py` against real model weights.** The script exists
-   and is verified end-to-end in mock mode (see above) — what's missing
-   is a real generation pass. Needs either your laptop or the AMD
-   instance, since it needs actual model weights downloaded. Consider
-   growing `tasks.jsonl` past 24 items once the first pass shows roughly
-   where the threshold should sit — more tasks = less chance the "best"
-   pair is a small-sample fluke.
+1. **Run `calibrate.py` against real model weights.** Script and a 269-task
+   set both exist and are verified end-to-end in mock mode — what's
+   missing is a real generation pass. Needs either your laptop or the AMD
+   instance, since it needs actual model weights downloaded.
+2. **Build the full benchmark table** — always-local / always-remote /
+   threshold-router / (later) learned-router, compared on accuracy, cost,
+   latency, % escalated. `calibrate.py` already gives always-local and
+   threshold-router for free; always-remote needs one pass through
+   Fireworks over the task set (budget: at Fireworks' per-token rates over
+   269 short prompts, this is cents, not dollars of the $50 credit).
+3. **Learned router** — logistic regression over the five extra features
+   above, trained on real (not synthetic) correctness labels once
+   `calibrate.py` has been run for real. Do this after #1, not before —
+   there's no real data to train on yet.
 2. **Swap `LOCAL_MODEL` to a Gemma 4 variant** (e.g. `google/gemma-4-E4B`)
    once credits land on the AMD instance — this makes the submission
    eligible for the separate "Best Use of Gemma" bonus pool at no extra

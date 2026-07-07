@@ -1,0 +1,49 @@
+{"task": "What is the capital of France?", "expected": "Paris", "match": "contains"}
+{"task": "What is the capital of Japan?", "expected": "Tokyo", "match": "contains"}
+{"task": "What is the capital of Australia?", "expected": "Canberra", "match": "contains"}
+{"task": "What is the capital of Canada?", "expected": "Ottawa", "match": "contains"}
+{"task": "What is the capital of Germany?", "expected": "Berlin", "match": "contains"}
+{"task": "What is the capital of Egypt?", "expected": "Cairo", "match": "contains"}
+{"task": "What is the capital of Brazil?", "expected": "Brasilia", "match": "contains"}
+{"task": "What is the capital of South Korea?", "expected": "Seoul", "match": "contains"}
+{"task": "Who wrote Romeo and Juliet?", "expected": "Shakespeare", "match": "contains"}
+{"task": "Who wrote Pride and Prejudice?", "expected": "Austen", "match": "contains"}
+{"task": "Who wrote War and Peace?", "expected": "Tolstoy", "match": "contains"}
+{"task": "Who painted the Mona Lisa?", "expected": "Leonardo", "match": "contains"}
+{"task": "Who painted Starry Night?", "expected": "Gogh", "match": "contains"}
+{"task": "What is the chemical symbol for gold?", "expected": "Au", "match": "contains"}
+{"task": "What is the chemical symbol for iron?", "expected": "Fe", "match": "contains"}
+{"task": "What is the chemical symbol for sodium?", "expected": "Na", "match": "contains"}
+{"task": "What is the chemical formula for water?", "expected": "H2O", "match": "contains"}
+{"task": "What is the chemical formula for table salt?", "expected": "NaCl", "match": "contains"}
+{"task": "What planet is known as the Red Planet?", "expected": "Mars", "match": "contains"}
+{"task": "What planet is the largest in the solar system?", "expected": "Jupiter", "match": "contains"}
+{"task": "What is the smallest planet in the solar system?", "expected": "Mercury", "match": "contains"}
+{"task": "What is the largest ocean on Earth?", "expected": "Pacific", "match": "contains"}
+{"task": "What is the longest river in Africa?", "expected": "Nile", "match": "contains"}
+{"task": "What gas do plants absorb from the atmosphere for photosynthesis?", "expected": "carbon dioxide", "match": "contains"}
+{"task": "What is the powerhouse of the cell?", "expected": "mitochondria", "match": "contains"}
+{"task": "What is the hardest natural substance on Earth?", "expected": "diamond", "match": "contains"}
+{"task": "What metal is liquid at room temperature?", "expected": "mercury", "match": "contains"}
+{"task": "What is the boiling point of water in Celsius at sea level?", "expected": "100", "match": "numeric"}
+{"task": "What is the freezing point of water in Celsius?", "expected": "0", "match": "numeric"}
+{"task": "How many continents are there?", "expected": "7", "match": "numeric"}
+{"task": "How many bones are in the adult human body?", "expected": "206", "match": "numeric"}
+{"task": "How many sides does a hexagon have?", "expected": "6", "match": "numeric"}
+{"task": "How many sides does an octagon have?", "expected": "8", "match": "numeric"}
+{"task": "What is the smallest prime number?", "expected": "2", "match": "numeric"}
+{"task": "What is the atomic number of oxygen?", "expected": "8", "match": "numeric"}
+{"task": "What is the atomic number of hydrogen?", "expected": "1", "match": "numeric"}
+{"task": "What year did World War II end?", "expected": "1945", "match": "numeric"}
+{"task": "What year did World War I start?", "expected": "1914", "match": "numeric"}
+{"task": "What year did India gain independence?", "expected": "1947", "match": "numeric"}
+{"task": "What year did the Berlin Wall fall?", "expected": "1989", "match": "numeric"}
+{"task": "How many planets are in the solar system?", "expected": "8", "match": "numeric"}
+{"task": "How many strings does a standard guitar have?", "expected": "6", "match": "numeric"}
+{"task": "How many players are on a standard soccer team on the field?", "expected": "11", "match": "numeric"}
+{"task": "How many legs does a spider have?", "expected": "8", "match": "numeric"}
+{"task": "If all cats are mammals and all mammals are animals, are all cats animals?", "expected": "yes", "match": "contains"}
+{"task": "If it is raining, the ground gets wet. The ground is not wet. Is it raining?", "expected": "no", "match": "contains"}
+{"task": "Is the sun a star or a planet?", "expected": "star", "match": "contains"}
+{"task": "Is a tomato a fruit or a vegetable, botanically speaking?", "expected": "fruit", "match": "contains"}
+{"task": "Which is heavier: a kilogram of feathers or a kilogram of iron?", "expected": "same", "match": "contains"}
