@@ -1,39 +1,73 @@
 """
-Remote tier: Fireworks AI, called via its OpenAI-compatible chat
-completions endpoint. Only hit when the router escalates -- this is the
-expensive path, and it's used sparingly by design.
+Fireworks AI call — only hit on escalation. Uses the OpenAI-compatible
+chat completions endpoint directly via requests, to keep the dependency
+footprint minimal.
 """
-from typing import Tuple
+import time
 
-import requests
+from config import (
+    FIREWORKS_API_KEY,
+    FIREWORKS_MODEL,
+    FIREWORKS_BASE_URL,
+    FIREWORKS_PRICE_PER_1K_TOKENS,
+    MOCK_REMOTE_CLIENT,
+)
 
-from config import CFG
 
+def query_fireworks(prompt: str) -> dict:
+    """
+    Returns:
+        text: the remote model's answer
+        cost_usd: estimated cost of this call
+        latency_ms: wall-clock call time
+        num_tokens: total tokens billed (prompt + completion)
+    """
+    start = time.perf_counter()
 
-class RemoteError(RuntimeError):
-    pass
+    if MOCK_REMOTE_CLIENT:
+        return _mock_query(prompt, start)
 
+    if not FIREWORKS_API_KEY:
+        raise RuntimeError("FIREWORKS_API_KEY not set — check your .env")
 
-def generate(prompt: str) -> Tuple[str, int]:
-    """Returns (text, total_tokens_used) so the caller can cost the call."""
-    if not CFG.fireworks_api_key:
-        raise RemoteError(
-            "FIREWORKS_API_KEY is not set -- put your Fireworks account key "
-            "(the one your FW-LABLAB-MRF6 coupon is credited to) in .env"
-        )
+    import requests
 
-    resp = requests.post(
-        f"{CFG.fireworks_base_url}/chat/completions",
-        headers={"Authorization": f"Bearer {CFG.fireworks_api_key}"},
+    response = requests.post(
+        f"{FIREWORKS_BASE_URL}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {FIREWORKS_API_KEY}",
+            "Content-Type": "application/json",
+        },
         json={
-            "model": CFG.fireworks_model,
+            "model": FIREWORKS_MODEL,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": CFG.fireworks_max_tokens,
+            "max_tokens": 512,
         },
         timeout=30,
     )
-    resp.raise_for_status()
-    data = resp.json()
+    response.raise_for_status()
+    data = response.json()
+
     text = data["choices"][0]["message"]["content"]
-    total_tokens = data.get("usage", {}).get("total_tokens", 0)
-    return text, total_tokens
+    usage = data.get("usage", {})
+    num_tokens = usage.get("total_tokens", 0)
+    cost_usd = (num_tokens / 1000) * FIREWORKS_PRICE_PER_1K_TOKENS
+
+    return {
+        "text": text,
+        "cost_usd": cost_usd,
+        "latency_ms": (time.perf_counter() - start) * 1000,
+        "num_tokens": num_tokens,
+    }
+
+
+def _mock_query(prompt: str, start: float) -> dict:
+    """Deterministic fake escalation response — no API key or network needed."""
+    num_tokens = 60
+    latency_ms = (time.perf_counter() - start) * 1000 + 120  # simulate network RTT
+    return {
+        "text": f"[mock Fireworks answer for: {prompt[:40]}]",
+        "cost_usd": (num_tokens / 1000) * FIREWORKS_PRICE_PER_1K_TOKENS,
+        "latency_ms": latency_ms,
+        "num_tokens": num_tokens,
+    }

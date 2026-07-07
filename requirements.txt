@@ -1,5 +1,6 @@
+torch
 transformers>=4.44
-torch>=2.2
-accelerate>=0.30
-requests>=2.31
-python-dotenv>=1.0
+accelerate
+python-dotenv
+requests
+numpy

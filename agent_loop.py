@@ -1,75 +1,92 @@
 """
-Entry point: run a task through the hybrid local/remote router.
+Orchestrates the full routing loop: generate locally, extract confidence,
+route, optionally escalate, log every decision.
 
+Usage:
     python agent_loop.py "What is the boiling point of water at 2 atm?"
-
-Flow:
-    1. Generate locally, get text + per-token logprobs (free -- already
-       computed as a side effect of generate())
-    2. Router looks at confidence, decides: keep the local answer, or
-       escalate to Fireworks
-    3. Log the decision + cost so the submission's cost/accuracy story
-       writes itself from runs/agent_log.jsonl
 """
-import json
 import sys
-import time
+import json
 from pathlib import Path
+from datetime import datetime, timezone
 
-from config import CFG
-import local_model
-import remote_client
-import router
+from local_model import LocalModel
+from router import decide
+from remote_client import query_fireworks
+
+LOG_PATH = Path(__file__).parent / "runs" / "agent_log.jsonl"
+
+_LOCAL_MODEL_SINGLETON = None
 
 
-def run(task: str, local: "local_model.LocalModel") -> dict:
-    t0 = time.time()
-    local_result = local.generate(task)
-    decision = router.decide(local_result)
+def _get_local_model() -> LocalModel:
+    # Loaded once per process — model load is the expensive part, so a
+    # CLI run or a batch eval loop should reuse this rather than
+    # re-instantiate LocalModel per task.
+    global _LOCAL_MODEL_SINGLETON
+    if _LOCAL_MODEL_SINGLETON is None:
+        _LOCAL_MODEL_SINGLETON = LocalModel()
+    return _LOCAL_MODEL_SINGLETON
+
+
+def run(task: str) -> dict:
+    local_model = _get_local_model()
+    local_result = local_model.generate(task)
+
+    decision = decide(local_result["mean_logprob"], local_result["min_logprob"])
 
     if decision.escalate:
-        remote_text, remote_tokens = remote_client.generate(task)
-        final_text = remote_text
-        cost = (remote_tokens / 1000) * CFG.fireworks_price_per_1k_tokens
-        route = "remote"
+        remote_result = query_fireworks(task)
+        record = {
+            "route": "remote",
+            "reason": decision.reason,
+            "answer": remote_result["text"],
+            "cost_usd": remote_result["cost_usd"],
+            "latency_ms": local_result["latency_ms"] + remote_result["latency_ms"],
+        }
     else:
-        final_text = local_result.text
-        cost = (len(local_result.token_logprobs) / 1000) * CFG.local_price_per_1k_tokens
-        route = "local"
+        record = {
+            "route": "local",
+            "reason": decision.reason,
+            "answer": local_result["text"],
+            # Local generation is treated as $0 marginal cost here — the
+            # AMD instance is billed hourly, not per-token, so once it's
+            # running, local calls don't add incremental spend. Worth
+            # stating explicitly in the submission as a modeling
+            # assumption, not hiding it.
+            "cost_usd": 0.0,
+            "latency_ms": local_result["latency_ms"],
+        }
 
-    return {
-        "task": task,
-        "route": route,
-        "reason": decision.reason,
-        "mean_logprob": local_result.mean_logprob,
-        "min_logprob": local_result.min_logprob,
-        "final_answer": final_text,
-        "cost_usd": cost,
-        "latency_s": time.time() - t0,
-    }
+    record["task"] = task
+    record["local_mean_logprob"] = local_result["mean_logprob"]
+    record["local_min_logprob"] = local_result["min_logprob"]
+    record["timestamp"] = datetime.now(timezone.utc).isoformat()
+
+    _log(record)
+    return record
 
 
-def log(record: dict):
-    path = Path(CFG.log_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as f:
+def _log(record: dict) -> None:
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with LOG_PATH.open("a") as f:
         f.write(json.dumps(record) + "\n")
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) < 2:
-        print("usage: python agent_loop.py '<task text>'")
+        print('Usage: python agent_loop.py "your task here"')
         sys.exit(1)
 
     task = sys.argv[1]
-    local = local_model.LocalModel()  # loaded once; reuse across calls in a real serving loop
-    record = run(task, local)
-    log(record)
+    record = run(task)
 
-    print(f"route       : {record['route']}")
-    print(f"reason      : {record['reason']}")
-    print(f"mean logprob: {record['mean_logprob']:.3f}   min logprob: {record['min_logprob']:.3f}")
-    print(f"cost (usd)  : {record['cost_usd']:.6f}")
-    print(f"latency (s) : {record['latency_s']:.2f}")
-    print()
-    print(record["final_answer"])
+    print(f"Route:      {record['route']}")
+    print(f"Reason:     {record['reason']}")
+    print(f"Cost (USD): {record['cost_usd']:.6f}")
+    print(f"Latency:    {record['latency_ms']:.1f} ms")
+    print(f"Answer:     {record['answer']}")
+
+
+if __name__ == "__main__":
+    main()

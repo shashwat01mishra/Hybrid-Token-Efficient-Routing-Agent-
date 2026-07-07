@@ -1,0 +1,24 @@
+{"task": "What is 17 times 23?", "expected": "391", "match": "numeric"}
+{"task": "What is 144 divided by 12?", "expected": "12", "match": "numeric"}
+{"task": "What is 7 squared?", "expected": "49", "match": "numeric"}
+{"task": "What is 15% of 200?", "expected": "30", "match": "numeric"}
+{"task": "What is the sum of 45 and 78?", "expected": "123", "match": "numeric"}
+{"task": "What is 2 to the power of 10?", "expected": "1024", "match": "numeric"}
+{"task": "What is 9 times 9?", "expected": "81", "match": "numeric"}
+{"task": "What is 100 minus 37?", "expected": "63", "match": "numeric"}
+{"task": "What is the capital of France?", "expected": "Paris", "match": "contains"}
+{"task": "What is the capital of Japan?", "expected": "Tokyo", "match": "contains"}
+{"task": "What is the capital of Australia?", "expected": "Canberra", "match": "contains"}
+{"task": "Who wrote Romeo and Juliet?", "expected": "Shakespeare", "match": "contains"}
+{"task": "What is the chemical symbol for gold?", "expected": "Au", "match": "contains"}
+{"task": "What is the boiling point of water in Celsius at sea level?", "expected": "100", "match": "numeric"}
+{"task": "What is the freezing point of water in Celsius?", "expected": "0", "match": "numeric"}
+{"task": "What planet is known as the Red Planet?", "expected": "Mars", "match": "contains"}
+{"task": "What is the largest ocean on Earth?", "expected": "Pacific", "match": "contains"}
+{"task": "What year did World War II end?", "expected": "1945", "match": "numeric"}
+{"task": "How many continents are there?", "expected": "7", "match": "numeric"}
+{"task": "What is the chemical formula for water?", "expected": "H2O", "match": "contains"}
+{"task": "Who painted the Mona Lisa?", "expected": "Leonardo", "match": "contains"}
+{"task": "What is the smallest prime number?", "expected": "2", "match": "numeric"}
+{"task": "How many sides does a hexagon have?", "expected": "6", "match": "numeric"}
+{"task": "What is the atomic number of oxygen?", "expected": "8", "match": "numeric"}

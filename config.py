@@ -1,44 +1,51 @@
 """
-Configuration for the hybrid routing agent.
-
-Everything that differs between "local laptop test" and "AMD Developer
-Cloud + Fireworks" lives here as env vars, so moving environments is a
-.env edit, not a code edit.
+All env-dependent settings for the routing agent live here. Nothing else
+in the codebase should read os.environ directly — if a new knob is needed,
+add it here first.
 """
 import os
-from dataclasses import dataclass
+from dotenv import load_dotenv
 
+load_dotenv()
 
-@dataclass
-class Config:
-    # --- Local tier ---
-    # Default is a tiny model so this runs on a CPU laptop for dev/testing.
-    # Swap to a Gemma variant on the AMD instance (qualifies for the
-    # "Best Use of Gemma" bonus track at zero extra build cost).
-    local_model_name: str = os.getenv("LOCAL_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
-    local_max_new_tokens: int = int(os.getenv("LOCAL_MAX_NEW_TOKENS", "256"))
-    local_device: str = os.getenv("LOCAL_DEVICE", "cpu")  # "cuda" on the AMD instance (ROCm exposes itself via the cuda device string)
+# --- Local tier ---
+# Bootstrap default: small, fast, CPU-friendly, so the pipeline can be
+# built and verified before the AMD instance / Gemma swap happens.
+#
+# TODO: swap to a Gemma 4 variant (e.g. google/gemma-4-E4B, or a larger
+# size once served on the AMD MI300X instance) once AMD Developer Cloud
+# credits land. This also makes the submission eligible for the separate
+# "Best Use of Gemma" bonus pool at zero extra build cost.
+LOCAL_MODEL = os.getenv("LOCAL_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
+MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "256"))
 
-    # --- Remote tier (Fireworks, OpenAI-compatible endpoint) ---
-    fireworks_api_key: str = os.getenv("FIREWORKS_API_KEY", "")
-    fireworks_model: str = os.getenv("FIREWORKS_MODEL", "accounts/fireworks/models/llama-v3p1-8b-instruct")
-    fireworks_base_url: str = os.getenv("FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1")
-    fireworks_max_tokens: int = int(os.getenv("FIREWORKS_MAX_TOKENS", "256"))
+# --- Remote tier (Fireworks AI) ---
+FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY", "")
+# Verify this against https://fireworks.ai/models before submission —
+# the catalog may have changed since this was written.
+FIREWORKS_MODEL = os.getenv(
+    "FIREWORKS_MODEL", "accounts/fireworks/models/llama-v3p1-8b-instruct"
+)
+FIREWORKS_BASE_URL = os.getenv(
+    "FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1"
+)
+# Placeholder price (USD per 1K tokens). Check https://fireworks.ai/pricing
+# for the real per-model rate and update before the cost numbers go into
+# the submission's cost/accuracy plot — this number is currently a guess.
+FIREWORKS_PRICE_PER_1K_TOKENS = float(
+    os.getenv("FIREWORKS_PRICE_PER_1K_TOKENS", "0.0009")
+)
 
-    # --- Router thresholds ---
-    # These are placeholders. Do not trust them. Calibrate against a small
-    # labeled (task, is_local_answer_correct) set before the demo -- sweep
-    # the threshold, plot accuracy vs. % escalated to Fireworks, pick the
-    # point that clears the accuracy floor with the fewest escalations.
-    mean_logprob_threshold: float = float(os.getenv("MEAN_LOGPROB_THRESHOLD", "-0.6"))
-    min_logprob_threshold: float = float(os.getenv("MIN_LOGPROB_THRESHOLD", "-3.0"))
+# --- Routing thresholds (PLACEHOLDERS — see README "what's still open") ---
+# Both are log-probabilities, so more negative = less confident.
+# A local answer is kept only if BOTH clear their threshold; failing
+# either escalates to Fireworks.
+MEAN_LOGPROB_THRESHOLD = float(os.getenv("MEAN_LOGPROB_THRESHOLD", "-0.5"))
+MIN_LOGPROB_THRESHOLD = float(os.getenv("MIN_LOGPROB_THRESHOLD", "-2.0"))
 
-    # --- Cost model (approximate -- for the demo's cost-accounting log) ---
-    fireworks_price_per_1k_tokens: float = float(os.getenv("FIREWORKS_PRICE_PER_1K", "0.0002"))
-    local_price_per_1k_tokens: float = float(os.getenv("LOCAL_PRICE_PER_1K", "0.0"))  # GPU-credit cost is sunk, treated as ~free at the margin
-
-    # --- Logging ---
-    log_path: str = os.getenv("LOG_PATH", "runs/agent_log.jsonl")
-
-
-CFG = Config()
+# --- Testing toggles ---
+# With both set to 1, the whole loop runs with zero network calls and
+# zero model downloads — useful for verifying router/logging logic
+# before spending real credits or API calls.
+MOCK_LOCAL_MODEL = os.getenv("MOCK_LOCAL_MODEL", "0") == "1"
+MOCK_REMOTE_CLIENT = os.getenv("MOCK_REMOTE_CLIENT", "0") == "1"

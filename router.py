@@ -1,42 +1,39 @@
 """
-The routing decision -- this is the entire "intelligence" the hackathon
-judges are scoring.
-
-Deliberately NOT using embedding/geometric similarity here: that's a
-different, unpublished research line (AI-LABS / H7) and is being kept out
-of this hackathon on purpose. This router uses only the token-level
-log-probabilities the local model already produced during generation --
-a well-established selective-prediction / cascade signal (see FrugalGPT
-and the LLM-cascade literature), computed at zero extra inference cost.
-
-Two signals, both must pass for the local answer to be trusted:
-  - mean_logprob: overall fluency/confidence across the whole answer
-  - min_logprob:  the single weakest token -- often a better hallucination
-                  flag than the mean, since one fabricated number or
-                  entity can sink an otherwise fluent answer without
-                  moving the average much
+The routing decision. This file is deliberately small — the "intelligence"
+being judged is the calibration of the two thresholds against real data
+(see README, "what's still open"), not architectural complexity here.
 """
 from dataclasses import dataclass
 
-from config import CFG
-from local_model import LocalResult
+from config import MEAN_LOGPROB_THRESHOLD, MIN_LOGPROB_THRESHOLD
 
 
 @dataclass
-class RoutingDecision:
+class RouteDecision:
     escalate: bool
     reason: str
 
 
-def decide(result: LocalResult) -> RoutingDecision:
-    if result.mean_logprob < CFG.mean_logprob_threshold:
-        return RoutingDecision(
+def decide(mean_logprob: float, min_logprob: float) -> RouteDecision:
+    """
+    Both confidence signals must clear their threshold for the local
+    answer to be trusted; failing either escalates to the remote
+    (paid) tier.
+
+    mean_logprob: average per-token log-probability of the local
+        generation — a smooth signal for overall fluency/confidence.
+    min_logprob: log-probability of the single least confident token —
+        catches the "one wrong number or entity in an otherwise fluent
+        answer" failure mode that the mean can hide.
+    """
+    if mean_logprob < MEAN_LOGPROB_THRESHOLD:
+        return RouteDecision(
             escalate=True,
-            reason=f"mean_logprob {result.mean_logprob:.3f} below threshold {CFG.mean_logprob_threshold}",
+            reason=f"mean_logprob {mean_logprob:.3f} < threshold {MEAN_LOGPROB_THRESHOLD}",
         )
-    if result.min_logprob < CFG.min_logprob_threshold:
-        return RoutingDecision(
+    if min_logprob < MIN_LOGPROB_THRESHOLD:
+        return RouteDecision(
             escalate=True,
-            reason=f"min_logprob {result.min_logprob:.3f} below threshold {CFG.min_logprob_threshold} (weak-token flag)",
+            reason=f"min_logprob {min_logprob:.3f} < threshold {MIN_LOGPROB_THRESHOLD}",
         )
-    return RoutingDecision(escalate=False, reason="local answer passed both confidence gates")
+    return RouteDecision(escalate=False, reason="both signals cleared threshold")
