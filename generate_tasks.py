@@ -48,6 +48,14 @@ def gen_arithmetic(n: int, seed: int):
         elif op == "pct":
             base = rng.choice([10, 20, 25, 50, 75, 100, 200, 400])
             pct = rng.choice([5, 10, 15, 20, 25, 50])
+            # Only accept combinations with a whole-number result. "15% of
+            # 25" is 3.75 — floor division was silently generating a wrong
+            # "expected" answer (3) that a model correctly answering
+            # 3.75 would fail. Caught by inspecting real wrong-answer
+            # output, not a hypothetical edge case.
+            while (base * pct) % 100 != 0:
+                base = rng.choice([10, 20, 25, 50, 75, 100, 200, 400])
+                pct = rng.choice([5, 10, 15, 20, 25, 50])
             q, ans = f"What is {pct}% of {base}?", base * pct // 100
         elif op == "pow":
             base = rng.randint(2, 9)
