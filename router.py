@@ -1,39 +1,29 @@
 """
-The routing decision. This file is deliberately small — the "intelligence"
-being judged is the calibration of the two thresholds against real data
-(see README, "what's still open"), not architectural complexity here.
+Escalation decision. Two gates must both pass for escalation to happen:
+1. Category is one where a 3B local model's ceiling is the real risk
+   (code_debugging, logical_reasoning) — escalating sentiment/summarization/
+   NER/factual isn't worth the token cost for a 3B model's typical gap there.
+2. Local confidence is actually low, per calibrated thresholds.
+
+Math never escalates — math_tool.py handles it deterministically and always
+wins regardless of confidence.
 """
-from dataclasses import dataclass
-
-from config import MEAN_LOGPROB_THRESHOLD, MIN_LOGPROB_THRESHOLD
+import config
 
 
-@dataclass
-class RouteDecision:
-    escalate: bool
-    reason: str
+def decide(category: str, features: dict, remote_available: bool) -> bool:
+    if category == "math":
+        return False
+    if not remote_available:
+        return False
+    if category not in config.ESCALATION_ELIGIBLE_CATEGORIES:
+        return False
 
+    mean_lp = features.get("mean_logprob", 0.0)
+    min_lp = features.get("min_logprob", 0.0)
 
-def decide(mean_logprob: float, min_logprob: float) -> RouteDecision:
-    """
-    Both confidence signals must clear their threshold for the local
-    answer to be trusted; failing either escalates to the remote
-    (paid) tier.
-
-    mean_logprob: average per-token log-probability of the local
-        generation — a smooth signal for overall fluency/confidence.
-    min_logprob: log-probability of the single least confident token —
-        catches the "one wrong number or entity in an otherwise fluent
-        answer" failure mode that the mean can hide.
-    """
-    if mean_logprob < MEAN_LOGPROB_THRESHOLD:
-        return RouteDecision(
-            escalate=True,
-            reason=f"mean_logprob {mean_logprob:.3f} < threshold {MEAN_LOGPROB_THRESHOLD}",
-        )
-    if min_logprob < MIN_LOGPROB_THRESHOLD:
-        return RouteDecision(
-            escalate=True,
-            reason=f"min_logprob {min_logprob:.3f} < threshold {MIN_LOGPROB_THRESHOLD}",
-        )
-    return RouteDecision(escalate=False, reason="both signals cleared threshold")
+    if mean_lp < config.MEAN_LOGPROB_THRESHOLD:
+        return True
+    if min_lp < config.MIN_LOGPROB_THRESHOLD:
+        return True
+    return False
