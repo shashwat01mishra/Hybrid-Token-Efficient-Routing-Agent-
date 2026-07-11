@@ -157,11 +157,12 @@ class LocalModel:
             prompt_tokens, self.mlx_model,
             max_tokens=MAX_NEW_TOKENS, sampler=sampler,
         ):
-            token_id = token.item()
+            token_id = token.item() if hasattr(token, "item") else int(token)
             if token_id in eos_ids:
                 break
 
-            logprobs_list.append(logprobs[token_id].item())
+            lp_val = logprobs[token_id]
+            logprobs_list.append(lp_val.item() if hasattr(lp_val, "item") else float(lp_val))
 
             probs = mx.exp(logprobs)
             entropies.append(-(probs * logprobs).sum().item())

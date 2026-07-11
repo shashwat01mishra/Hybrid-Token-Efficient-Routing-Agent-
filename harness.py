@@ -21,7 +21,7 @@ import traceback
 import config
 import math_tool
 import prompt_templates
-import router
+import router_submission as router
 import remote_client_submission
 
 try:

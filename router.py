@@ -1,29 +1,36 @@
 """
-Escalation decision. Two gates must both pass for escalation to happen:
-1. Category is one where a 3B local model's ceiling is the real risk
-   (code_debugging, logical_reasoning) — escalating sentiment/summarization/
-   NER/factual isn't worth the token cost for a 3B model's typical gap there.
-2. Local confidence is actually low, per calibrated thresholds.
+Escalation decision for the dev/calibration loop (agent_loop.py).
 
-Math never escalates — math_tool.py handles it deterministically and always
-wins regardless of confidence.
+RECONSTRUCTED — the original router.py was overwritten by a submission-
+specific version with a different signature (fixed 2026-07-11). This
+version is rebuilt to match agent_loop.py's actual call site exactly:
+    decision = decide(local_result["mean_logprob"], local_result["min_logprob"])
+    if decision.escalate: ... decision.reason ...
+If a real git history of this repo exists (a proper `git clone`, not a
+GitHub zip download — zips never include .git), check
+`git log -- router.py` there first; it would recover the byte-exact
+original rather than this reconstruction.
 """
-import config
+from dataclasses import dataclass
+
+from config import MEAN_LOGPROB_THRESHOLD, MIN_LOGPROB_THRESHOLD
 
 
-def decide(category: str, features: dict, remote_available: bool) -> bool:
-    if category == "math":
-        return False
-    if not remote_available:
-        return False
-    if category not in config.ESCALATION_ELIGIBLE_CATEGORIES:
-        return False
+@dataclass
+class RouteDecision:
+    escalate: bool
+    reason: str
 
-    mean_lp = features.get("mean_logprob", 0.0)
-    min_lp = features.get("min_logprob", 0.0)
 
-    if mean_lp < config.MEAN_LOGPROB_THRESHOLD:
-        return True
-    if min_lp < config.MIN_LOGPROB_THRESHOLD:
-        return True
-    return False
+def decide(mean_logprob: float, min_logprob: float) -> RouteDecision:
+    if mean_logprob < MEAN_LOGPROB_THRESHOLD:
+        return RouteDecision(
+            escalate=True,
+            reason=f"mean_logprob {mean_logprob:.3f} below threshold {MEAN_LOGPROB_THRESHOLD}",
+        )
+    if min_logprob < MIN_LOGPROB_THRESHOLD:
+        return RouteDecision(
+            escalate=True,
+            reason=f"min_logprob {min_logprob:.3f} below threshold {MIN_LOGPROB_THRESHOLD}",
+        )
+    return RouteDecision(escalate=False, reason="confidence above both thresholds")

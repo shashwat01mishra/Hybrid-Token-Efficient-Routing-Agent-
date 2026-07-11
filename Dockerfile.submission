@@ -18,12 +18,13 @@ RUN pip install --no-cache-dir -r requirements-submission.txt \
 
 # Bake the GGUF model in at build time (not downloaded at runtime, so
 # container startup stays within the 60s ready-time budget).
-# NOTE: replace this URL with the actual model asset location before the
-# real build — this is a placeholder path, confirm the exact quantized
-# GGUF release URL for Qwen2.5-3B-Instruct-Q4_K_M before running for real.
+# URL confirmed against Qwen's official Qwen2.5-3B-Instruct-GGUF repo on
+# Hugging Face (filename and repo path verified via web search) — NOT yet
+# verified by an actual successful download in this environment, since this
+# sandbox has no network access to huggingface.co. First real build attempt
+# is the actual test.
 RUN mkdir -p /app/model && \
-    wget -q -O /app/model/qwen2.5-3b-instruct-q4_k_m.gguf \
-    "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+    python3 -c "import urllib.request; urllib.request.urlretrieve('https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf', '/app/model/qwen2.5-3b-instruct-q4_k_m.gguf'); print('Model downloaded.')"
 
 COPY config.py math_tool.py prompt_templates.py local_model_gguf.py router.py remote_client_submission.py harness.py .
 

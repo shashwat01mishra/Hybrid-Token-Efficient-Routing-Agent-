@@ -24,7 +24,21 @@ def _get_llama():
             model_path=config.LOCAL_MODEL_PATH,
             n_ctx=config.LOCAL_MODEL_CTX,
             n_threads=config.LOCAL_MODEL_THREADS,
-            logits_all=False,
+            # llama-cpp-python's own docs: "logits_all: ... Must be True for
+            # completion to return logprobs." Set True so create_chat_completion
+            # actually has a chance of populating logprobs at all.
+            # UNVERIFIED WARNING: there are open upstream issues (e.g.
+            # abetlen/llama-cpp-python#1787, ggml-org/llama.cpp#6423) reporting
+            # that logprobs=True on create_chat_completion still doesn't
+            # reliably return usable per-token logprobs even with this set.
+            # Do a real smoke test (one real call, print the raw response
+            # dict, confirm token_logprobs actually populates) before trusting
+            # the router's escalation decisions on this. If it doesn't work,
+            # the failure is SILENT, not a crash: _features_from_logprobs
+            # degrades to mean_logprob=0.0 (above any realistic negative
+            # threshold), so the router will simply never escalate rather
+            # than error out.
+            logits_all=True,
             verbose=False,
         )
     return _LLAMA
@@ -105,7 +119,8 @@ def generate(prompt: str, system_prompt: str = "", max_tokens: int = None):
         messages=messages,
         max_tokens=max_tokens,
         temperature=0.0,
-        logprobs=5,
+        logprobs=True,
+        top_logprobs=5,
     )
 
     choice = result["choices"][0]
