@@ -1,55 +1,45 @@
 """
-All env-dependent settings for the routing agent live here. Nothing else
-in the codebase should read os.environ directly — if a new knob is needed,
-add it here first.
+Central configuration for the AMD Hackathon Track 1 submission.
+Everything the harness needs is read from environment variables here —
+nothing hardcoded, since the grading harness injects these at eval time.
 """
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# --- I/O paths ---
+TASKS_INPUT_PATH = os.environ.get("TASKS_INPUT_PATH", "/input/tasks.json")
+RESULTS_OUTPUT_PATH = os.environ.get("RESULTS_OUTPUT_PATH", "/output/results.json")
 
-# --- Local tier ---
-# Bootstrap default: small, fast, CPU-friendly, so the pipeline can be
-# built and verified before the AMD instance / Gemma swap happens.
-#
-# TODO: swap to a Gemma 4 variant (e.g. google/gemma-4-E4B, or a larger
-# size once served on the AMD MI300X instance) once AMD Developer Cloud
-# credits land. This also makes the submission eligible for the separate
-# "Best Use of Gemma" bonus pool at zero extra build cost.
-LOCAL_MODEL = os.getenv("LOCAL_MODEL", "Qwen/Qwen2.5-0.5B-Instruct")
-MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "256"))
-# "transformers" (works everywhere, uses MPS on Apple Silicon if available)
-# or "mlx" (Apple Silicon only — faster, lighter, needs mlx-lm installed
-# separately since it can't be a hard requirement for the AMD instance).
-LOCAL_BACKEND = os.getenv("LOCAL_BACKEND", "transformers")
+# --- Time budget ---
+# Guide's hard cap is 10 minutes total. We budget to 9 minutes internally
+# to leave a safety margin for writing output even if generation runs long.
+TOTAL_TIME_BUDGET_SECONDS = int(os.environ.get("TOTAL_TIME_BUDGET_SECONDS", 9 * 60))
+PER_REQUEST_TIMEOUT_SECONDS = int(os.environ.get("PER_REQUEST_TIMEOUT_SECONDS", 25))
 
-# --- Remote tier (Fireworks AI) ---
-FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY", "")
-# Verify this against https://fireworks.ai/models before submission —
-# the catalog may have changed since this was written.
-FIREWORKS_MODEL = os.getenv(
-    "FIREWORKS_MODEL", "accounts/fireworks/models/llama-v3p1-8b-instruct"
-)
-FIREWORKS_BASE_URL = os.getenv(
-    "FIREWORKS_BASE_URL", "https://api.fireworks.ai/inference/v1"
-)
-# Placeholder price (USD per 1K tokens). Check https://fireworks.ai/pricing
-# for the real per-model rate and update before the cost numbers go into
-# the submission's cost/accuracy plot — this number is currently a guess.
-FIREWORKS_PRICE_PER_1K_TOKENS = float(
-    os.getenv("FIREWORKS_PRICE_PER_1K_TOKENS", "0.0009")
-)
+# --- Local model ---
+LOCAL_MODEL_PATH = os.environ.get("LOCAL_MODEL_PATH", "/app/model/qwen2.5-3b-instruct-q4_k_m.gguf")
+LOCAL_MODEL_THREADS = int(os.environ.get("LOCAL_MODEL_THREADS", 2))
+LOCAL_MODEL_CTX = int(os.environ.get("LOCAL_MODEL_CTX", 2048))
+LOCAL_MODEL_MAX_NEW_TOKENS = int(os.environ.get("LOCAL_MODEL_MAX_NEW_TOKENS", 512))
+MOCK_LOCAL_MODEL = os.environ.get("MOCK_LOCAL_MODEL", "0") == "1"
 
-# --- Routing thresholds (PLACEHOLDERS — see README "what's still open") ---
-# Both are log-probabilities, so more negative = less confident.
-# A local answer is kept only if BOTH clear their threshold; failing
-# either escalates to Fireworks.
-MEAN_LOGPROB_THRESHOLD = float(os.getenv("MEAN_LOGPROB_THRESHOLD", "-0.5"))
-MIN_LOGPROB_THRESHOLD = float(os.getenv("MIN_LOGPROB_THRESHOLD", "-2.0"))
+# --- Remote (Fireworks) ---
+FIREWORKS_API_KEY = os.environ.get("FIREWORKS_API_KEY", "")
+FIREWORKS_BASE_URL = os.environ.get("FIREWORKS_BASE_URL", "")
+ALLOWED_MODELS = [m.strip() for m in os.environ.get("ALLOWED_MODELS", "").split(",") if m.strip()]
+MOCK_REMOTE_CLIENT = os.environ.get("MOCK_REMOTE_CLIENT", "0") == "1"
 
-# --- Testing toggles ---
-# With both set to 1, the whole loop runs with zero network calls and
-# zero model downloads — useful for verifying router/logging logic
-# before spending real credits or API calls.
-MOCK_LOCAL_MODEL = os.getenv("MOCK_LOCAL_MODEL", "0") == "1"
-MOCK_REMOTE_CLIENT = os.getenv("MOCK_REMOTE_CLIENT", "0") == "1"
+# --- Routing thresholds ---
+# Escalate only when local confidence falls below these. Calibrated values
+# should replace these defaults once real confidence data exists on the
+# actual GGUF stack (not the old 7B/0.5B calibration data).
+MEAN_LOGPROB_THRESHOLD = float(os.environ.get("MEAN_LOGPROB_THRESHOLD", -1.2))
+MIN_LOGPROB_THRESHOLD = float(os.environ.get("MIN_LOGPROB_THRESHOLD", -4.0))
+
+# Categories where remote escalation is actually allowed to help.
+# Math is handled deterministically (math_tool.py) and never escalates.
+# Factual/sentiment/summarization/NER are cheap enough locally that
+# escalation isn't worth the token cost for a 3B model's typical gap.
+# Code debugging and logical reasoning are the two categories where a
+# 3B model's reasoning ceiling is the real risk, so escalation is reserved
+# for those.
+ESCALATION_ELIGIBLE_CATEGORIES = {"code_debugging", "logical_reasoning"}

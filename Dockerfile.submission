@@ -1,0 +1,32 @@
+# Submission image for AMD Developer Hackathon Act-II, Track 1.
+# Target: 4GB RAM / 2 vCPU / no GPU grading box. Must build linux/amd64.
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements-submission.txt .
+
+# llama-cpp-python==0.3.2 compiles a C++ core from source on pip install
+# unless a prebuilt wheel matches the exact platform/Python combo. Point at
+# the project's prebuilt CPU wheel index first to skip compilation entirely
+# (keeps the image smaller, avoids needing gcc/cmake on a slim base). If a
+# future version bump ever breaks this index match, fall back to:
+#   RUN apt-get update && apt-get install -y build-essential cmake && rm -rf /var/lib/apt/lists/*
+# before the pip install below.
+RUN pip install --no-cache-dir -r requirements-submission.txt \
+    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+
+# Bake the GGUF model in at build time (not downloaded at runtime, so
+# container startup stays within the 60s ready-time budget).
+# NOTE: replace this URL with the actual model asset location before the
+# real build — this is a placeholder path, confirm the exact quantized
+# GGUF release URL for Qwen2.5-3B-Instruct-Q4_K_M before running for real.
+RUN mkdir -p /app/model && \
+    wget -q -O /app/model/qwen2.5-3b-instruct-q4_k_m.gguf \
+    "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+
+COPY config.py math_tool.py prompt_templates.py local_model_gguf.py router.py remote_client_submission.py harness.py .
+
+ENV LOCAL_MODEL_PATH=/app/model/qwen2.5-3b-instruct-q4_k_m.gguf
+
+CMD ["python3", "harness.py"]

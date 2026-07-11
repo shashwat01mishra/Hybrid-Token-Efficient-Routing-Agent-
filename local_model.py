@@ -136,7 +136,7 @@ class LocalModel:
 
         messages = [{"role": "user", "content": prompt}]
         prompt_str = self.mlx_tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True
+            messages, tokenize=False, add_generation_prompt=True
         )
         prompt_tokens = mx.array(self.mlx_tokenizer.encode(prompt_str))
 
@@ -181,13 +181,22 @@ class LocalModel:
     def _generate_transformers(self, prompt: str, start: float) -> dict:
         torch = self._torch
         messages = [{"role": "user", "content": prompt}]
-        input_ids = self.tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, return_tensors="pt"
-        ).to(self.device)
+        # Get the templated string first, then tokenize it explicitly —
+        # apply_chat_template's return type with return_tensors="pt" has
+        # changed across transformers versions (sometimes a plain tensor,
+        # sometimes a BatchEncoding), which broke model.generate() on a
+        # newer version. Tokenizing separately is the version-stable path.
+        prompt_str = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        encoded = self.tokenizer(prompt_str, return_tensors="pt").to(self.device)
+        input_ids = encoded["input_ids"]
+        attention_mask = encoded.get("attention_mask")
 
         with torch.no_grad():
             output = self.model.generate(
-                input_ids,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
                 max_new_tokens=MAX_NEW_TOKENS,
                 do_sample=False,
                 output_scores=True,
