@@ -16,7 +16,8 @@ RUN pip install --no-cache-dir huggingface_hub && \
 
 COPY config.py math_tool.py prompt_templates.py local_model_gguf.py \
     router.py router_submission.py remote_client_submission.py \
-    harness.py verify.py agent_loop.py .
+    harness.py verify.py agent_loop.py server.py .
+COPY web/ ./web/
 
 ENV LOCAL_MODEL_PATH=/app/model/qwen2.5-3b-instruct-q4_k_m.gguf
 
