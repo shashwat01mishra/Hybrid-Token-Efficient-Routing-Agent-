@@ -23,6 +23,7 @@ import math_tool
 import prompt_templates
 import router_submission as router
 import remote_client_submission
+import verify
 
 try:
     import local_model_gguf
@@ -92,6 +93,37 @@ def process_task(task: dict, remote_available: bool) -> str:
     except Exception as e:
         _log(f"local generation failed on task {task.get('task_id')}: {e}")
         return ""
+
+    # Deterministic override: a syntax error in code output is a CERTAIN
+    # accuracy-gate failure, not a maybe — check this before the normal
+    # confidence-based routing, regardless of what the logprob features say.
+    if category in ("code_debugging", "code_generation"):
+        try:
+            needs_attention, error_msg = verify.verify_code_answer(text)
+        except Exception as e:
+            _log(f"verify.verify_code_answer failed on task {task.get('task_id')}: {e}")
+            needs_attention, error_msg = False, ""
+
+        if needs_attention:
+            if remote_available:
+                try:
+                    retry_prompt = verify.build_retry_prompt(prompt, text, error_msg)
+                    remote_text = remote_client_submission.query_fireworks(
+                        retry_prompt, system_prompt=system_prompt
+                    )
+                    return remote_text
+                except Exception as e:
+                    _log(f"remote retry-on-syntax-error failed on task {task.get('task_id')}: {e}")
+                    # fall through to a single local retry instead of giving up
+            try:
+                retry_prompt = verify.build_retry_prompt(prompt, text, error_msg)
+                retried_text, _features2 = local_model_gguf.generate(
+                    retry_prompt, system_prompt=system_prompt
+                )
+                return retried_text
+            except Exception as e:
+                _log(f"local retry-on-syntax-error failed on task {task.get('task_id')}: {e}")
+                return text  # still the best answer we have, never withhold it
 
     try:
         should_escalate = router.decide(category, features, remote_available)
