@@ -74,18 +74,21 @@ def _log(record: dict) -> None:
 
 
 def main():
-    if len(sys.argv) < 2:
-        print('Usage: python agent_loop.py "your task here"')
-        sys.exit(1)
+    if len(sys.argv) >= 2:
+        # Dev/CLI mode: single task from command line argument
+        task = sys.argv[1]
+        record = run(task)
 
-    task = sys.argv[1]
-    record = run(task)
-
-    print(f"Route:      {record['route']}")
-    print(f"Reason:     {record['reason']}")
-    print(f"Cost (USD): {record['cost_usd']:.6f}")
-    print(f"Latency:    {record['latency_ms']:.1f} ms")
-    print(f"Answer:     {record['answer']}")
+        print(f"Route:      {record['route']}")
+        print(f"Reason:     {record['reason']}")
+        print(f"Cost (USD): {record['cost_usd']:.6f}")
+        print(f"Latency:    {record['latency_ms']:.1f} ms")
+        print(f"Answer:     {record['answer']}")
+    else:
+        # Submission mode: no args → read /input/tasks.json, write /output/results.json
+        # Delegate to the harness which already implements the full I/O contract.
+        import harness
+        harness.main()
 
 
 if __name__ == "__main__":
