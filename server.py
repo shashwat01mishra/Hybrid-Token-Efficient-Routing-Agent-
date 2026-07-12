@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Lightweight API and static file web server for the Routing Agent Dashboard.
-Uses only Python standard libraries to avoid package dependencies.
+Wired up specifically to use the SUBMISSION stack files (local_model_gguf.py,
+remote_client_submission.py, and router_submission.py) as defined in the
+submission Dockerfile to match the hackathon pipeline exactly.
 """
 
 import os
@@ -24,20 +26,20 @@ try:
 except ImportError:
     pass
 
-# Import agent components
+# Import agent submission stack components
 import config
-import agent_loop
 import math_tool
 import prompt_templates
 import verify
-import router
 import router_submission
-import remote_client
+import remote_client_submission
 
-# Soft fallback if Firework API key is missing and mock remote is disabled
-if not config.FIREWORKS_API_KEY and not config.MOCK_REMOTE_CLIENT:
-    print("[WARNING] FIREWORKS_API_KEY is not set. Automatically enabling MOCK_REMOTE_CLIENT for testing.", file=sys.stderr)
-    config.MOCK_REMOTE_CLIENT = True
+# Import GGUF local model
+try:
+    import local_model_gguf
+except Exception as e:
+    print(f"[ERROR] Failed to import local_model_gguf: {e}", file=sys.stderr)
+    local_model_gguf = None
 
 
 def run_routing_trace(task: str) -> dict:
@@ -48,44 +50,57 @@ def run_routing_trace(task: str) -> dict:
     from datetime import datetime, timezone
     
     category = prompt_templates.classify_category(task, math_tool.is_math_prompt)
-    local_model = agent_loop._get_local_model()
     
+    try:
+        remote_available = remote_client_submission.is_available()
+    except Exception:
+        remote_available = False
+        
     trace = {
         "task": task,
         "category": category,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "local_model": config.LOCAL_MODEL,
+        "local_model": config.LOCAL_MODEL_PATH,
         "remote_model": config.FIREWORKS_MODEL,
         "mean_threshold": config.MEAN_LOGPROB_THRESHOLD,
         "min_threshold": config.MIN_LOGPROB_THRESHOLD,
+        "remote_available": remote_available,
     }
     
+    if local_model_gguf is None:
+        raise RuntimeError("local_model_gguf is not imported successfully. Check llama-cpp-python installation.")
+
     # 1. Math solving path (Deterministic, bypasses routing)
     if category == "math":
         start_time = time.perf_counter()
-        extraction_prompt = math_tool.build_extraction_prompt(task)
-        local_result = local_model.generate(extraction_prompt)
-        raw_expr = local_result.get("text", "")
-        expr = math_tool.clean_extracted_expression(raw_expr)
         
-        eval_success = False
-        result = ""
-        error_msg = ""
-        if expr:
-            try:
-                val = math_tool.safe_eval(expr)
-                if isinstance(val, float) and val.is_integer():
-                    val = int(val)
-                result = str(val)
-                eval_success = True
-            except Exception as e:
-                result = raw_expr
-                error_msg = str(e)
-        else:
-            result = raw_expr
-            error_msg = "Could not extract mathematical expression"
+        def _local_generate_plain(prompt: str) -> str:
+            text, _features = local_model_gguf.generate(prompt)
+            return text
+            
+        try:
+            result = math_tool.solve_math_task(task, _local_generate_plain)
+            eval_success = True
+            error_msg = ""
+        except Exception as e:
+            # Degrade gracefully
+            result = "[Math solver failure]"
+            eval_success = False
+            error_msg = str(e)
             
         latency_ms = (time.perf_counter() - start_time) * 1000
+        
+        # Gather mock/real features for frontend gauges
+        _, mock_features = local_model_gguf.generate(task)
+        local_result = {
+            "text": result,
+            "mean_logprob": float(mock_features.get("mean_logprob", 0.0)),
+            "min_logprob": float(mock_features.get("min_logprob", 0.0)),
+            "entropy_mean": float(mock_features.get("entropy_mean", 0.0)),
+            "top2_margin_mean": float(mock_features.get("top2_margin_mean", 0.0)),
+            "num_tokens": len(result.split()),
+            "latency_ms": latency_ms,
+        }
         
         trace.update({
             "final_route": "math",
@@ -93,8 +108,8 @@ def run_routing_trace(task: str) -> dict:
             "total_latency_ms": latency_ms,
             "total_cost_usd": 0.0,
             "math_info": {
-                "extracted_expr": raw_expr,
-                "cleaned_expr": expr,
+                "extracted_expr": task,
+                "cleaned_expr": "Extracted & evaluated by AST solver",
                 "eval_success": eval_success,
                 "error_msg": error_msg
             },
@@ -113,21 +128,35 @@ def run_routing_trace(task: str) -> dict:
             "cost_usd": 0.0,
             "latency_ms": latency_ms,
             "task": task,
-            "local_mean_logprob": local_result.get("mean_logprob", 0.0),
-            "local_min_logprob": local_result.get("min_logprob", 0.0),
+            "local_mean_logprob": local_result["mean_logprob"],
+            "local_min_logprob": local_result["min_logprob"],
             "timestamp": trace["timestamp"],
             "category": "math"
         }
-        agent_loop._log(record)
+        _log_to_file(record)
         return trace
 
-    # 2. General pathway: Run local model inference
-    local_result = local_model.generate(task)
-    trace["local_generation"] = local_result
+    # 2. General pathway: Run local GGUF model inference
+    system_prompt = prompt_templates.get_template(category)
+    start_local = time.perf_counter()
+    local_text, local_features = local_model_gguf.generate(task, system_prompt=system_prompt)
+    local_latency_ms = (time.perf_counter() - start_local) * 1000
     
-    mean_lp = local_result.get("mean_logprob", 0.0)
-    min_lp = local_result.get("min_logprob", 0.0)
-    local_text = local_result.get("text", "")
+    mean_lp = float(local_features.get("mean_logprob", 0.0))
+    min_lp = float(local_features.get("min_logprob", 0.0))
+    entropy_mean = float(local_features.get("entropy_mean", 0.0))
+    top2_margin_mean = float(local_features.get("top2_margin_mean", 0.0))
+
+    local_result = {
+        "text": local_text,
+        "mean_logprob": mean_lp,
+        "min_logprob": min_lp,
+        "entropy_mean": entropy_mean,
+        "top2_margin_mean": top2_margin_mean,
+        "num_tokens": len(local_text.split()),
+        "latency_ms": local_latency_ms,
+    }
+    trace["local_generation"] = local_result
     
     # Check syntax if code debugging or generation
     syntax_error_occurred = False
@@ -140,79 +169,122 @@ def run_routing_trace(task: str) -> dict:
             trace["code_verify_failed"] = True
             trace["code_verify_error"] = syntax_error_msg
             
-    # Compute router decisions (dev vs submission)
-    dev_decision = router.decide(mean_lp, min_lp)
-    
-    remote_available = not config.MOCK_REMOTE_CLIENT or config.FIREWORKS_API_KEY != ""
-    sub_escalate = router_submission.decide(category, local_result, remote_available)
+    # Check router decision (uses router_submission.py)
+    should_escalate = router_submission.decide(category, local_features, remote_available)
     
     trace["router_decisions"] = {
-        "dev_router": {
-            "escalate": dev_decision.escalate,
-            "reason": dev_decision.reason
-        },
         "submission_router": {
-            "escalate": sub_escalate,
-            "reason": f"Category eligibility: {category in config.ESCALATION_ELIGIBLE_CATEGORIES}. Confidence checks: mean_lp={mean_lp:.3f} (threshold {config.MEAN_LOGPROB_THRESHOLD}), min_lp={min_lp:.3f} (threshold {config.MIN_LOGPROB_THRESHOLD})"
+            "escalate": should_escalate,
+            "reason": (
+                f"Category: {category} (escalation-eligible: {category in config.ESCALATION_ELIGIBLE_CATEGORIES}). "
+                f"Confidence check: mean_lp={mean_lp:.3f} (threshold {config.MEAN_LOGPROB_THRESHOLD}), "
+                f"min_lp={min_lp:.3f} (threshold {config.MIN_LOGPROB_THRESHOLD}). "
+                f"Remote available: {remote_available}."
+            )
         }
     }
     
-    # We follow the dev router logic for execution pathway, but incorporate syntax checking.
-    # If code syntax check fails, we automatically escalate to remote client (mimics harness.py retry).
-    escalate = dev_decision.escalate or syntax_error_occurred
-    
-    if syntax_error_occurred and remote_available:
+    # Execute routing / retry logic matching harness.py
+    if syntax_error_occurred:
         retry_prompt = verify.build_retry_prompt(task, local_text, syntax_error_msg)
-        start_time = time.perf_counter()
+        if remote_available:
+            start_remote = time.perf_counter()
+            try:
+                remote_text = remote_client_submission.query_fireworks(retry_prompt, system_prompt=system_prompt)
+                remote_latency = (time.perf_counter() - start_remote) * 1000
+                total_latency = local_latency_ms + remote_latency
+                
+                # Estimate cost for stats visualization
+                num_tokens = len(retry_prompt.split()) + len(remote_text.split()) + 20
+                cost_usd = (num_tokens / 1000) * config.FIREWORKS_PRICE_PER_1K_TOKENS
+                
+                trace.update({
+                    "final_route": "verify_escalate_remote",
+                    "final_answer": remote_text,
+                    "total_latency_ms": total_latency,
+                    "total_cost_usd": cost_usd,
+                    "remote_generation": {
+                        "text": remote_text,
+                        "latency_ms": remote_latency,
+                        "cost_usd": cost_usd,
+                        "num_tokens": num_tokens
+                    },
+                    "routing_decision": {
+                        "escalate": True,
+                        "reason": f"Code verification syntax error: {syntax_error_msg}. Escalated to remote client."
+                    }
+                })
+            except Exception as e:
+                trace.update({
+                    "final_route": "verify_escalate_failed",
+                    "final_answer": local_text,
+                    "total_latency_ms": local_latency_ms,
+                    "total_cost_usd": 0.0,
+                    "routing_decision": {
+                        "escalate": True,
+                        "reason": f"Syntax verification failed. Remote recovery error: {e}. Fell back to local answer."
+                    }
+                })
+        else:
+            # Local retry
+            start_retry = time.perf_counter()
+            try:
+                retried_text, _features2 = local_model_gguf.generate(retry_prompt, system_prompt=system_prompt)
+                retry_latency = (time.perf_counter() - start_retry) * 1000
+                
+                trace.update({
+                    "final_route": "verify_retry_local",
+                    "final_answer": retried_text,
+                    "total_latency_ms": local_latency_ms + retry_latency,
+                    "total_cost_usd": 0.0,
+                    "routing_decision": {
+                        "escalate": False,
+                        "reason": f"Code syntax error: {syntax_error_msg}. Local retry executed."
+                    }
+                })
+            except Exception as e:
+                trace.update({
+                    "final_route": "verify_retry_failed",
+                    "final_answer": local_text,
+                    "total_latency_ms": local_latency_ms,
+                    "total_cost_usd": 0.0,
+                    "routing_decision": {
+                        "escalate": False,
+                        "reason": f"Code syntax error. Local retry failed: {e}."
+                    }
+                })
+    elif should_escalate:
+        # Confidence escalation
+        start_remote = time.perf_counter()
         try:
-            remote_res = remote_client.query_fireworks(retry_prompt)
-            latency_ms = local_result.get("latency_ms", 0.0) + (time.perf_counter() - start_time) * 1000
+            remote_text = remote_client_submission.query_fireworks(task, system_prompt=system_prompt)
+            remote_latency = (time.perf_counter() - start_remote) * 1000
+            total_latency = local_latency_ms + remote_latency
             
-            trace.update({
-                "final_route": "verify_escalate_remote",
-                "final_answer": remote_res.get("text", ""),
-                "total_latency_ms": latency_ms,
-                "total_cost_usd": remote_res.get("cost_usd", 0.0),
-                "remote_generation": remote_res,
-                "routing_decision": {
-                    "escalate": True,
-                    "reason": f"Syntax verification failed: {syntax_error_msg}. Escalate-on-error triggered."
-                }
-            })
-        except Exception as e:
-            trace.update({
-                "final_route": "verify_escalate_failed",
-                "final_answer": local_text,
-                "total_latency_ms": local_result.get("latency_ms", 0.0),
-                "total_cost_usd": 0.0,
-                "routing_decision": {
-                    "escalate": True,
-                    "reason": f"Syntax verification failed. Remote recovery error: {e}"
-                }
-            })
-    elif escalate:
-        # Escalation due to low confidence scores
-        start_time = time.perf_counter()
-        try:
-            remote_res = remote_client.query_fireworks(task)
-            latency_ms = local_result.get("latency_ms", 0.0) + (time.perf_counter() - start_time) * 1000
+            num_tokens = len(task.split()) + len(remote_text.split()) + 20
+            cost_usd = (num_tokens / 1000) * config.FIREWORKS_PRICE_PER_1K_TOKENS
             
             trace.update({
                 "final_route": "remote",
-                "final_answer": remote_res.get("text", ""),
-                "total_latency_ms": latency_ms,
-                "total_cost_usd": remote_res.get("cost_usd", 0.0),
-                "remote_generation": remote_res,
+                "final_answer": remote_text,
+                "total_latency_ms": total_latency,
+                "total_cost_usd": cost_usd,
+                "remote_generation": {
+                    "text": remote_text,
+                    "latency_ms": remote_latency,
+                    "cost_usd": cost_usd,
+                    "num_tokens": num_tokens
+                },
                 "routing_decision": {
                     "escalate": True,
-                    "reason": dev_decision.reason
+                    "reason": trace["router_decisions"]["submission_router"]["reason"]
                 }
             })
         except Exception as e:
             trace.update({
                 "final_route": "remote_failed",
                 "final_answer": local_text,
-                "total_latency_ms": local_result.get("latency_ms", 0.0),
+                "total_latency_ms": local_latency_ms,
                 "total_cost_usd": 0.0,
                 "routing_decision": {
                     "escalate": True,
@@ -224,11 +296,11 @@ def run_routing_trace(task: str) -> dict:
         trace.update({
             "final_route": "local",
             "final_answer": local_text,
-            "total_latency_ms": local_result.get("latency_ms", 0.0),
+            "total_latency_ms": local_latency_ms,
             "total_cost_usd": 0.0,
             "routing_decision": {
                 "escalate": False,
-                "reason": dev_decision.reason
+                "reason": trace["router_decisions"]["submission_router"]["reason"]
             }
         })
         
@@ -245,8 +317,15 @@ def run_routing_trace(task: str) -> dict:
         "timestamp": trace["timestamp"],
         "category": category
     }
-    agent_loop._log(record)
+    _log_to_file(record)
     return trace
+
+
+def _log_to_file(record: dict) -> None:
+    log_path = Path(__file__).parent / "runs" / "agent_log.jsonl"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 class AgentDashboardHandler(SimpleHTTPRequestHandler):
@@ -261,8 +340,8 @@ class AgentDashboardHandler(SimpleHTTPRequestHandler):
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             data = {
-                "LOCAL_MODEL": config.LOCAL_MODEL,
-                "LOCAL_BACKEND": config.LOCAL_BACKEND,
+                "LOCAL_MODEL": config.LOCAL_MODEL_PATH,
+                "LOCAL_BACKEND": "llama-cpp-python",
                 "FIREWORKS_MODEL": config.FIREWORKS_MODEL,
                 "MEAN_LOGPROB_THRESHOLD": config.MEAN_LOGPROB_THRESHOLD,
                 "MIN_LOGPROB_THRESHOLD": config.MIN_LOGPROB_THRESHOLD,
@@ -326,7 +405,7 @@ def run_server(port=8080):
     print(f"\n=======================================================")
     print(f"Routing Agent Dashboard server successfully initialized!")
     print(f"URL: http://localhost:{port}")
-    print(f"Local config: {config.LOCAL_MODEL} ({config.LOCAL_BACKEND})")
+    print(f"Local Model: {config.LOCAL_MODEL_PATH} (GGUF)")
     print(f"Press Ctrl+C to terminate.")
     print(f"=======================================================\n")
     try:

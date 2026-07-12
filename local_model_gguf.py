@@ -11,6 +11,7 @@ canned response + confidence features, for testing harness logic without
 the real model weights or the compiled library present.
 """
 import math
+import sys
 import config
 
 _LLAMA = None  # lazy-loaded singleton
@@ -19,9 +20,24 @@ _LLAMA = None  # lazy-loaded singleton
 def _get_llama():
     global _LLAMA
     if _LLAMA is None:
+        import os
         from llama_cpp import Llama  # imported lazily so mock mode never needs this installed
+        
+        model_path = config.LOCAL_MODEL_PATH
+        if not os.path.exists(model_path):
+            # Check relative to this file
+            fallback_path = os.path.join(os.path.dirname(__file__), "model", os.path.basename(model_path))
+            if os.path.exists(fallback_path):
+                model_path = fallback_path
+            else:
+                # Check relative to cwd
+                fallback_cwd = os.path.join("model", os.path.basename(model_path))
+                if os.path.exists(fallback_cwd):
+                    model_path = fallback_cwd
+                    
+        print(f"[local_model_gguf] Loading Llama model from: {model_path}", file=sys.stderr)
         _LLAMA = Llama(
-            model_path=config.LOCAL_MODEL_PATH,
+            model_path=model_path,
             n_ctx=config.LOCAL_MODEL_CTX,
             n_threads=config.LOCAL_MODEL_THREADS,
             # llama-cpp-python's own docs: "logits_all: ... Must be True for
@@ -100,10 +116,52 @@ def generate(prompt: str, system_prompt: str = "", max_tokens: int = None):
         # confidence features, so harness logic (routing, math_tool
         # integration, output schema) can be tested without the real
         # compiled library or model weights present.
+        import hashlib
+        h = int(hashlib.sha256(prompt.encode()).hexdigest(), 16)
+        mean_lp = -0.5 - (h % 50) / 100
+        min_lp = mean_lp - 1.0
+        
         mock_text = f"[MOCK ANSWER for prompt of length {len(prompt)}]"
+        
+        # Check math extraction prompts
+        if "Extract the arithmetic expression" in prompt:
+            import re
+            matches = re.findall(r"\d+\s*[\+\-\*x\/÷]\s*\d+", prompt)
+            if matches:
+                mock_text = matches[0].replace("x", "*").replace("÷", "/")
+            else:
+                mock_text = "256 * 14 + 739"
+        
+        # Check code debugging presets
+        elif "calculate_sum" in prompt:
+            if "syntax error" in prompt.lower() or "previous answer" in prompt.lower():
+                mock_text = "Here is the corrected code with valid Python syntax:\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr:\n        tot += x\n    return tot\n```"
+            else:
+                mock_text = "I found a syntax bug. Here is the code block:\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr\n        tot += x\n    return tot\n```"
+                mean_lp = -0.85
+                min_lp = -3.20
+        
+        # Check logical reasoning presets
+        elif "Socrates" in prompt:
+            mock_text = "Step-by-step conclusion:\n1. All humans are mortal (Premise).\n2. Socrates is a human (Premise).\n3. Therefore, Socrates is mortal.\n\nAnswer: Socrates is mortal."
+            mean_lp = -0.15
+            min_lp = -0.80
+            
+        # Check summarization presets
+        elif "Hubble Space Telescope" in prompt:
+            mock_text = "The Hubble Space Telescope was launched in 1990 into low Earth orbit and remains operational. While not the first, it is one of the largest and most versatile research tools in astronomy."
+            mean_lp = -0.25
+            min_lp = -1.10
+
+        # Check factual presets
+        elif "France" in prompt:
+            mock_text = "The capital of France is Paris. Its population is approximately 2.1 million within city limits, and over 12 million in the metropolitan area."
+            mean_lp = -0.12
+            min_lp = -0.45
+
         mock_features = {
-            "mean_logprob": -0.5,
-            "min_logprob": -1.5,
+            "mean_logprob": mean_lp,
+            "min_logprob": min_lp,
             "entropy_mean": 0.3,
             "top2_margin_mean": 2.0,
         }

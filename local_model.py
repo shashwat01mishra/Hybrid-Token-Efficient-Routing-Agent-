@@ -257,9 +257,52 @@ class LocalModel:
         worst_decile_mean = min_lp - (h % 30) / 20
         logprob_variance = ((mean_lp - min_lp) ** 2) / 3
 
-        latency_ms = (time.perf_counter() - start) * 1000 + 5
+        # Formulate realistic text responses based on prompt context
+        text = f"[mock local answer for: {prompt[:40]}]"
+        
+        # Check math extraction prompts
+        if "Extract the arithmetic expression" in prompt:
+            import re
+            matches = re.findall(r"\d+\s*[\+\-\*x\/÷]\s*\d+", prompt)
+            if matches:
+                text = matches[0].replace("x", "*").replace("÷", "/")
+            else:
+                text = "256 * 14 + 739"
+        
+        # Check code debugging presets
+        elif "calculate_sum" in prompt:
+            if "syntax error" in prompt.lower() or "previous answer" in prompt.lower():
+                # Success case: correct syntax
+                text = "Here is the corrected code with valid Python syntax:\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr:\n        tot += x\n    return tot\n```"
+            else:
+                # Failure case: broken syntax
+                text = "I found a syntax bug. Here is the code block:\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr\n        tot += x\n    return tot\n```"
+                # Artificially lower confidence so it forces routing evaluation
+                mean_lp = -0.85
+                min_lp = -3.20
+        
+        # Check logical reasoning presets
+        elif "Socrates" in prompt:
+            text = "Step-by-step conclusion:\n1. All humans are mortal (Premise).\n2. Socrates is a human (Premise).\n3. Therefore, Socrates is mortal.\n\nAnswer: Socrates is mortal."
+            # High confidence
+            mean_lp = -0.15
+            min_lp = -0.80
+            
+        # Check summarization presets
+        elif "Hubble Space Telescope" in prompt:
+            text = "The Hubble Space Telescope was launched in 1990 into low Earth orbit and remains operational. While not the first, it is one of the largest and most versatile research tools in astronomy."
+            mean_lp = -0.25
+            min_lp = -1.10
+
+        # Check factual presets
+        elif "France" in prompt:
+            text = "The capital of France is Paris. Its population is approximately 2.1 million within city limits, and over 12 million in the metropolitan area."
+            mean_lp = -0.12
+            min_lp = -0.45
+
+        latency_ms = (time.perf_counter() - start) * 1000 + 15
         return {
-            "text": f"[mock local answer for: {prompt[:40]}]",
+            "text": text,
             "mean_logprob": mean_lp,
             "min_logprob": min_lp,
             "entropy_mean": entropy_mean,
@@ -267,6 +310,6 @@ class LocalModel:
             "worst_decile_mean": worst_decile_mean,
             "logprob_variance": logprob_variance,
             "eos_logprob_last": eos_logprob_last,
-            "num_tokens": 42,
+            "num_tokens": len(text.split()),
             "latency_ms": latency_ms,
         }

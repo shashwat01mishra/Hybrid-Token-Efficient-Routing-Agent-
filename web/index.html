@@ -76,180 +76,175 @@
                 </div>
             </header>
 
-            <div class="dashboard-grid">
-                <!-- Left column: Console & Flow -->
-                <div class="grid-col left-col">
-                    <!-- Console Card -->
-                    <div class="card console-card">
-                        <div class="card-header">
-                            <h2><i data-lucide="terminal"></i> Input Console</h2>
-                            <span class="badge" id="category-badge">Auto-detect</span>
+            <!-- Live Routing Flow Card (Full Width) -->
+            <div class="card flow-card">
+                <div class="card-header">
+                    <h2><i data-lucide="git-fork"></i> Live Routing Flow</h2>
+                    <button class="btn btn-text-icon" id="reset-flow-btn" title="Reset Flow Visualization">
+                        <i data-lucide="rotate-ccw"></i>
+                    </button>
+                </div>
+                <div class="card-body flow-container">
+                    <div class="flow-grid">
+                        <!-- Row 1: Start -->
+                        <div class="flow-node node-start" id="node-start">
+                            <i data-lucide="message-square" class="node-icon"></i>
+                            <span class="node-label">User Query</span>
                         </div>
-                        <div class="card-body">
-                            <textarea id="prompt-input" placeholder="Type your query or select a preset task from the sidebar..."></textarea>
-                            <button id="run-btn" class="btn btn-primary">
-                                <span class="btn-text">Execute Agent Loop</span>
-                                <i data-lucide="play" class="btn-icon"></i>
-                            </button>
+                        <div class="flow-arrow horizontal" id="arrow-start-to-classify"></div>
+                        <div class="flow-node node-step" id="node-classify">
+                            <i data-lucide="tag" class="node-icon"></i>
+                            <span class="node-label">Classifier</span>
+                            <span class="node-sub" id="flow-category">-</span>
                         </div>
-                    </div>
 
-                    <!-- Flow Visualizer Card -->
-                    <div class="card flow-card">
-                        <div class="card-header">
-                            <h2><i data-lucide="git-fork"></i> Live Routing Flow</h2>
-                            <button class="btn btn-text-icon" id="reset-flow-btn" title="Reset Flow Visualization">
-                                <i data-lucide="rotate-ccw"></i>
-                            </button>
+                        <!-- Grid Branches -->
+                        <!-- Row 2: Path Split -->
+                        <div class="flow-arrow-split" id="flow-branches">
+                            <div class="branch-line math-branch" id="branch-math-line">
+                                <span class="branch-label">Math</span>
+                            </div>
+                            <div class="branch-line code-branch" id="branch-code-line">
+                                <span class="branch-label">Code</span>
+                            </div>
+                            <div class="branch-line standard-branch" id="branch-standard-line">
+                                <span class="branch-label">General</span>
+                            </div>
                         </div>
-                        <div class="card-body flow-container">
-                            <div class="flow-grid">
-                                <!-- Row 1: Start -->
-                                <div class="flow-node node-start" id="node-start">
-                                    <i data-lucide="message-square" class="node-icon"></i>
-                                    <span class="node-label">User Query</span>
+
+                        <!-- Level 3: Processing Nodes -->
+                        <div class="processing-columns">
+                            <!-- Math Solver -->
+                            <div class="column-branch math-column">
+                                <div class="flow-node node-tool" id="node-math-eval">
+                                    <i data-lucide="calculator" class="node-icon"></i>
+                                    <span class="node-label">Python AST Solver</span>
+                                    <span class="node-sub" id="flow-math-expr">-</span>
                                 </div>
-                                <div class="flow-arrow horizontal" id="arrow-start-to-classify"></div>
-                                <div class="flow-node node-step" id="node-classify">
-                                    <i data-lucide="tag" class="node-icon"></i>
-                                    <span class="node-label">Classifier</span>
-                                    <span class="node-sub" id="flow-category">-</span>
+                            </div>
+
+                            <!-- Standard Pipeline -->
+                            <div class="column-branch standard-column">
+                                <div class="flow-node node-model" id="node-local-model">
+                                    <i data-lucide="cpu" class="node-icon"></i>
+                                    <span class="node-label">Local Model</span>
+                                    <span class="node-sub" id="flow-local-tokens">-</span>
                                 </div>
-
-                                <!-- Grid Branches -->
-                                <!-- Row 2: Path Split -->
-                                <div class="flow-arrow-split" id="flow-branches">
-                                    <div class="branch-line math-branch" id="branch-math-line">
-                                        <span class="branch-label">Math</span>
-                                    </div>
-                                    <div class="branch-line code-branch" id="branch-code-line">
-                                        <span class="branch-label">Code</span>
-                                    </div>
-                                    <div class="branch-line standard-branch" id="branch-standard-line">
-                                        <span class="branch-label">General</span>
-                                    </div>
+                                <div class="flow-arrow vertical" id="arrow-local-to-gate"></div>
+                                
+                                <!-- Code Syntax Gate -->
+                                <div class="flow-node node-gate code-gate-only" id="node-code-gate">
+                                    <i data-lucide="check-square" class="node-icon"></i>
+                                    <span class="node-label">Syntax Check</span>
+                                    <span class="node-sub" id="flow-syntax-status">-</span>
                                 </div>
+                                <div class="flow-arrow vertical code-gate-only" id="arrow-code-to-gate"></div>
 
-                                <!-- Level 3: Processing Nodes -->
-                                <div class="processing-columns">
-                                    <!-- Math Solver -->
-                                    <div class="column-branch math-column">
-                                        <div class="flow-node node-tool" id="node-math-eval">
-                                            <i data-lucide="calculator" class="node-icon"></i>
-                                            <span class="node-label">Python AST Solver</span>
-                                            <span class="node-sub" id="flow-math-expr">-</span>
-                                        </div>
+                                <!-- Confidence Gating -->
+                                <div class="flow-node node-gate" id="node-confidence-gate">
+                                    <i data-lucide="scale" class="node-icon"></i>
+                                    <span class="node-label">Confidence Gate</span>
+                                    <span class="node-sub" id="flow-confidence-status">-</span>
+                                </div>
+                                
+                                <div class="decision-branches">
+                                    <div class="decision-branch keep-branch">
+                                        <div class="flow-arrow vertical" id="arrow-gate-to-keep"></div>
+                                        <span class="gate-label green">Pass</span>
                                     </div>
-
-                                    <!-- Standard Pipeline -->
-                                    <div class="column-branch standard-column">
-                                        <div class="flow-node node-model" id="node-local-model">
-                                            <i data-lucide="cpu" class="node-icon"></i>
-                                            <span class="node-label">Local Model</span>
-                                            <span class="node-sub" id="flow-local-tokens">-</span>
-                                        </div>
-                                        <div class="flow-arrow vertical" id="arrow-local-to-gate"></div>
-                                        
-                                        <!-- Code Syntax Gate -->
-                                        <div class="flow-node node-gate code-gate-only" id="node-code-gate">
-                                            <i data-lucide="check-square" class="node-icon"></i>
-                                            <span class="node-label">Syntax Check</span>
-                                            <span class="node-sub" id="flow-syntax-status">-</span>
-                                        </div>
-                                        <div class="flow-arrow vertical code-gate-only" id="arrow-code-to-gate"></div>
-
-                                        <!-- Confidence Gating -->
-                                        <div class="flow-node node-gate" id="node-confidence-gate">
-                                            <i data-lucide="scale" class="node-icon"></i>
-                                            <span class="node-label">Confidence Gate</span>
-                                            <span class="node-sub" id="flow-confidence-status">-</span>
-                                        </div>
-                                        
-                                        <div class="decision-branches">
-                                            <div class="decision-branch keep-branch">
-                                                <div class="flow-arrow vertical" id="arrow-gate-to-keep"></div>
-                                                <span class="gate-label green">Pass</span>
-                                            </div>
-                                            <div class="decision-branch escalate-branch">
-                                                <div class="flow-arrow horizontal-long" id="arrow-gate-to-escalate"></div>
-                                                <span class="gate-label amber">Escalate</span>
-                                                <div class="flow-node node-model-escalated" id="node-remote-model">
-                                                    <i data-lucide="cloud" class="node-icon"></i>
-                                                    <span class="node-label">Fireworks API</span>
-                                                    <span class="node-sub" id="flow-remote-model-name">-</span>
-                                                </div>
-                                            </div>
+                                    <div class="decision-branch escalate-branch">
+                                        <div class="flow-arrow horizontal-long" id="arrow-gate-to-escalate"></div>
+                                        <span class="gate-label amber">Escalate</span>
+                                        <div class="flow-node node-model-escalated" id="node-remote-model">
+                                            <i data-lucide="cloud" class="node-icon"></i>
+                                            <span class="node-label">Fireworks API</span>
+                                            <span class="node-sub" id="flow-remote-model-name">-</span>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Level 4: Final Output Merge -->
-                                <div class="flow-output-container">
-                                    <div class="flow-node node-end" id="node-end">
-                                        <i data-lucide="check-circle" class="node-icon"></i>
-                                        <span class="node-label">Final Answer</span>
-                                        <span class="node-sub" id="flow-route-chosen">-</span>
-                                    </div>
-                                </div>
+                        <!-- Level 4: Final Output Merge -->
+                        <div class="flow-output-container">
+                            <div class="flow-node node-end" id="node-end">
+                                <i data-lucide="check-circle" class="node-icon"></i>
+                                <span class="node-label">Final Answer</span>
+                                <span class="node-sub" id="flow-route-chosen">-</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Right column: Telemetry & Log list -->
-                <div class="grid-col right-col">
-                    <!-- Response Telemetry Card -->
-                    <div class="card telemetry-card">
-                        <div class="card-header">
-                            <h2><i data-lucide="activity"></i> Execution Telemetry</h2>
+            <!-- Details Grid (Console, Telemetry, Output side-by-side) -->
+            <div class="details-grid">
+                <!-- Console Card -->
+                <div class="card console-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="terminal"></i> Input Console</h2>
+                        <span class="badge" id="category-badge">Auto-detect</span>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="prompt-input" placeholder="Type your query or select a preset task from the sidebar..."></textarea>
+                        <button id="run-btn" class="btn btn-primary">
+                            <span class="btn-text">Execute Agent Loop</span>
+                            <i data-lucide="play" class="btn-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Response Telemetry Card -->
+                <div class="card telemetry-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="activity"></i> Execution Telemetry</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="telemetry-grid">
+                            <div class="telemetry-item">
+                                <span class="lbl">Route Selected</span>
+                                <span class="val badge" id="tel-route">-</span>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="lbl">Total Latency</span>
+                                <span class="val text-highlight" id="tel-latency">-</span>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="lbl">Estimated Cost</span>
+                                <span class="val text-highlight" id="tel-cost">-</span>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="lbl">Logprobs (Mean)</span>
+                                <div class="gauge-container">
+                                    <div class="gauge-bar-bg">
+                                        <div class="gauge-bar-fill" id="gauge-mean" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="gauge-text" id="tel-mean-lp">-</span>
+                                </div>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="lbl">Logprobs (Min)</span>
+                                <div class="gauge-container">
+                                    <div class="gauge-bar-bg">
+                                        <div class="gauge-bar-fill" id="gauge-min" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="gauge-text" id="tel-min-lp">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="telemetry-grid">
-                                <div class="telemetry-item">
-                                    <span class="lbl">Route Selected</span>
-                                    <span class="val badge" id="tel-route">-</span>
-                                </div>
-                                <div class="telemetry-item">
-                                    <span class="lbl">Total Latency</span>
-                                    <span class="val text-highlight" id="tel-latency">-</span>
-                                </div>
-                                <div class="telemetry-item">
-                                    <span class="lbl">Estimated Cost</span>
-                                    <span class="val text-highlight" id="tel-cost">-</span>
-                                </div>
-                                <div class="telemetry-item">
-                                    <span class="lbl">Logprobs (Mean)</span>
-                                    <div class="gauge-container">
-                                        <div class="gauge-bar-bg">
-                                            <div class="gauge-bar-fill" id="gauge-mean" style="width: 0%;"></div>
-                                        </div>
-                                        <span class="gauge-text" id="tel-mean-lp">-</span>
-                                    </div>
-                                </div>
-                                <div class="telemetry-item">
-                                    <span class="lbl">Logprobs (Min)</span>
-                                    <div class="gauge-container">
-                                        <div class="gauge-bar-bg">
-                                            <div class="gauge-bar-fill" id="gauge-min" style="width: 0%;"></div>
-                                        </div>
-                                        <span class="gauge-text" id="tel-min-lp">-</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="routing-reason-box" id="tel-reason">
-                                Select a query to view decision trace...
-                            </div>
+                        <div class="routing-reason-box" id="tel-reason">
+                            Select a query to view decision trace...
                         </div>
                     </div>
+                </div>
 
-                    <!-- Response Output Card -->
-                    <div class="card output-card">
-                        <div class="card-header">
-                            <h2><i data-lucide="file-text"></i> Agent Output</h2>
-                        </div>
-                        <div class="card-body">
-                            <pre id="output-box" class="output-text select-all">Output will appear here after execution...</pre>
-                        </div>
+                <!-- Response Output Card -->
+                <div class="card output-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="file-text"></i> Agent Output</h2>
+                    </div>
+                    <div class="card-body">
+                        <pre id="output-box" class="output-text select-all">Output will appear here after execution...</pre>
                     </div>
                 </div>
             </div>

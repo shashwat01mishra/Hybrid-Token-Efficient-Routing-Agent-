@@ -38,7 +38,16 @@ def is_available() -> bool:
 
 def query_fireworks(prompt: str, system_prompt: str = "") -> str:
     if config.MOCK_REMOTE_CLIENT:
-        return f"[MOCK REMOTE ANSWER for prompt of length {len(prompt)}]"
+        text = f"[MOCK REMOTE ANSWER for prompt of length {len(prompt)}]"
+        if "calculate_sum" in prompt:
+            text = "Here is the corrected code (escalated to Fireworks AI):\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr:\n        tot += x\n    return tot\n```"
+        elif "Socrates" in prompt:
+            text = "Logical reasoning conclusion (escalated to Fireworks AI):\n1. All humans are mortal (Premise).\n2. Socrates is a human (Premise).\n3. Therefore, Socrates is mortal.\n\nAnswer: Socrates is mortal."
+        elif "France" in prompt:
+            text = "The capital of France is Paris. Its population is approximately 2.1 million within city limits, and over 12 million in the metropolitan area. (escalated to Fireworks AI)"
+        elif "Hubble" in prompt:
+            text = "Summary of Hubble Space Telescope (escalated to Fireworks AI):\nLaunched in 1990 into low Earth orbit, the Hubble Space Telescope is a large and versatile research tool that remains operational and has transformed astronomy."
+        return text
 
     if requests is None:
         raise RuntimeError("requests library not available for real remote call")

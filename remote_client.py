@@ -65,8 +65,20 @@ def _mock_query(prompt: str, start: float) -> dict:
     """Deterministic fake escalation response — no API key or network needed."""
     num_tokens = 60
     latency_ms = (time.perf_counter() - start) * 1000 + 120  # simulate network RTT
+    
+    text = f"[mock Fireworks answer for: {prompt[:40]}]"
+    
+    if "calculate_sum" in prompt:
+        text = "Here is the corrected code (escalated to Fireworks AI):\n\n```python\ndef calculate_sum(arr):\n    tot = 0\n    for x in arr:\n        tot += x\n    return tot\n```"
+    elif "Socrates" in prompt:
+        text = "Logical reasoning conclusion (escalated to Fireworks AI):\n1. All humans are mortal (Premise).\n2. Socrates is a human (Premise).\n3. Therefore, Socrates is mortal.\n\nAnswer: Socrates is mortal."
+    elif "France" in prompt:
+        text = "The capital of France is Paris. Its population is approximately 2.1 million within city limits, and over 12 million in the metropolitan area. (escalated to Fireworks AI)"
+    elif "Hubble" in prompt:
+        text = "Summary of Hubble Space Telescope (escalated to Fireworks AI):\nLaunched in 1990 into low Earth orbit, the Hubble Space Telescope is a large and versatile research tool that remains operational and has transformed astronomy."
+
     return {
-        "text": f"[mock Fireworks answer for: {prompt[:40]}]",
+        "text": text,
         "cost_usd": (num_tokens / 1000) * FIREWORKS_PRICE_PER_1K_TOKENS,
         "latency_ms": latency_ms,
         "num_tokens": num_tokens,
