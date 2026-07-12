@@ -4,29 +4,27 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Build tools needed to compile llama-cpp-python from source.
+# Compiling from source produces a glibc-native .so (no musl dependency),
+# which is required on python:3.11-slim (Debian bookworm, glibc).
+# The prebuilt wheels from abetlen's index link against musl libc and
+# fail to load on glibc systems.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential cmake && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY requirements-submission.txt .
 
-# llama-cpp-python==0.3.2 compiles a C++ core from source on pip install
-# unless a prebuilt wheel matches the exact platform/Python combo. Point at
-# the project's prebuilt CPU wheel index first to skip compilation entirely
-# (keeps the image smaller, avoids needing gcc/cmake on a slim base). If a
-# future version bump ever breaks this index match, fall back to:
-#   RUN apt-get update && apt-get install -y build-essential cmake && rm -rf /var/lib/apt/lists/*
-# before the pip install below.
-RUN pip install --no-cache-dir -r requirements-submission.txt \
-    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+# No --extra-index-url: pip will compile llama-cpp-python from source
+# using the build tools above. CPU-only, no BLAS, no GPU.
+# This takes ~10 min on first build but is cached on subsequent rebuilds.
+RUN pip install --no-cache-dir -r requirements-submission.txt
 
-# Bake the GGUF model in at build time (not downloaded at runtime, so
-# container startup stays within the 60s ready-time budget).
-# URL confirmed against Qwen's official Qwen2.5-3B-Instruct-GGUF repo on
-# Hugging Face (filename and repo path verified via web search) — NOT yet
-# verified by an actual successful download in this environment, since this
-# sandbox has no network access to huggingface.co. First real build attempt
-# is the actual test.
-RUN mkdir -p /app/model && \
-    python3 -c "import urllib.request; urllib.request.urlretrieve('https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf', '/app/model/qwen2.5-3b-instruct-q4_k_m.gguf'); print('Model downloaded.')"
+# Model is pre-downloaded locally (./model/) — COPY is instant vs 10-min wget.
+COPY model/qwen2.5-3b-instruct-q4_k_m.gguf /app/model/qwen2.5-3b-instruct-q4_k_m.gguf
 
-COPY config.py math_tool.py prompt_templates.py local_model_gguf.py router.py remote_client_submission.py harness.py .
+# Source files — last layer so code changes don't bust model/pip cache
+COPY config.py math_tool.py prompt_templates.py local_model_gguf.py router.py router_submission.py remote_client_submission.py harness.py .
 
 ENV LOCAL_MODEL_PATH=/app/model/qwen2.5-3b-instruct-q4_k_m.gguf
 

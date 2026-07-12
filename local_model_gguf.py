@@ -130,8 +130,22 @@ def generate(prompt: str, system_prompt: str = "", max_tokens: int = None):
     top_logprobs_list = []
     lp_data = choice.get("logprobs")
     if lp_data:
-        token_logprobs = lp_data.get("token_logprobs") or []
-        top_logprobs_list = lp_data.get("top_logprobs") or []
+        if isinstance(lp_data, dict):
+            if "content" in lp_data and lp_data["content"] is not None:
+                # OpenAI / modern llama-cpp-python style
+                for item in lp_data["content"]:
+                    token_logprobs.append(item.get("logprob", 0.0))
+                    # Extract top logprobs if present
+                    top_dict = {}
+                    for top in item.get("top_logprobs", []):
+                        token_val = top.get("token", "")
+                        lp_val = top.get("logprob", 0.0)
+                        top_dict[token_val] = lp_val
+                    top_logprobs_list.append(top_dict)
+            else:
+                # Legacy llama-cpp-python style
+                token_logprobs = lp_data.get("token_logprobs") or []
+                top_logprobs_list = lp_data.get("top_logprobs") or []
 
     features = _features_from_logprobs(token_logprobs, top_logprobs_list)
     return text, features
