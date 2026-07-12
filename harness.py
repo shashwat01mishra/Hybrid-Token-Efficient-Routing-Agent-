@@ -105,6 +105,7 @@ def process_task(task: dict, remote_available: bool) -> str:
             needs_attention, error_msg = False, ""
 
         if needs_attention:
+            _log(f"task {task.get('task_id')} [{category}]: syntax check FAILED: {error_msg}")
             if remote_available:
                 try:
                     retry_prompt = verify.build_retry_prompt(prompt, text, error_msg)
@@ -130,6 +131,11 @@ def process_task(task: dict, remote_available: bool) -> str:
     except Exception as e:
         _log(f"router.decide failed on task {task.get('task_id')}: {e}")
         should_escalate = False
+
+    _log(
+        f"task {task.get('task_id')} [{category}]: escalate={should_escalate} "
+        f"features={features} remote_available={remote_available}"
+    )
 
     if should_escalate:
         try:
